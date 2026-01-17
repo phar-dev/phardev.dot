@@ -1,0 +1,460 @@
+#!/bin/bash
+
+# Detener el script si hay un error
+set -e
+
+# =====================================================
+# 🎨 CONFIGURACIÓN Y VARIABLES
+# =====================================================
+
+# Colores para formatear la salida
+PINK=$(tput setaf 204)
+PURPLE=$(tput setaf 141)
+GREEN=$(tput setaf 114)
+ORANGE=$(tput setaf 208)
+BLUE=$(tput setaf 75)
+YELLOW=$(tput setaf 221)
+RED=$(tput setaf 196)
+NC=$(tput sgr0) # No Color
+BOLD="\e[1m"
+RESET="\e[0m"
+
+# URLs y configuración
+BREW_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
+REPO_URL="https://github.com/Pblo16/pablo.dots.git"
+REPO_BRANCH="main"
+REPO_DIR="pablo.dots"
+ZOXIDE_URL="https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh"
+ATUIN_URL="https://setup.atuin.sh"
+
+# Paquetes
+BREW_PACKAGES=(
+  "fnm"
+  "pnpm"
+  "neovim"
+  "gh"
+  "ripgrep"
+  "jandedobbeleer/oh-my-posh/oh-my-posh"
+  "lazygit"
+  "fzf"
+  "go"
+)
+
+APT_PACKAGES=(
+  "build-essential"
+  "curl"
+  "file"
+  "git"
+  "zsh"
+  "lsd"
+  "unzip"
+  "p7zip"
+  "stow"
+)
+
+STOW_DIRECTORIES=(
+  "nvim"
+  "zsh"
+  "promt"
+)
+
+# Directorios
+CONFIG_DIR="$HOME/.config"
+NVIM_CONFIG_DIR="$CONFIG_DIR/nvim"
+
+# =====================================================
+# 🛠️ FUNCIONES AUXILIARES
+# =====================================================
+
+# Función para imprimir encabezados
+print_header() {
+  local text="$1"
+  local len=${#text}
+  local width=$((len + 4))
+  local top_bottom=$(printf '═%.0s' $(seq 1 $width))
+  echo -e "${BLUE}╔${top_bottom}╗${RESET}"
+  echo -e "${BLUE}║  ${BOLD}${GREEN}${text}${RESET}  ${BLUE}║${RESET}"
+  echo -e "${BLUE}╚${top_bottom}╝${RESET}"
+  echo
+}
+
+# Función para mostrar un spinner
+spinner() {
+  local pid=$1
+  local delay=0.1
+  local spinstr='|/-\'
+  while ps -p $pid > /dev/null; do
+    local temp=${spinstr#?}
+    printf " [%c]  " "$spinstr"
+    local spinstr=$temp${spinstr%"$temp"}
+    sleep $delay
+    printf "\b\b\b\b\b\b"
+  done
+  printf "    \b\b\b\b\b"
+}
+
+# Función para imprimir mensajes de éxito
+success_msg() {
+  echo -e "${GREEN}✅ $1${RESET}"
+}
+
+# Función para imprimir mensajes informativos
+info_msg() {
+  echo -e "${YELLOW}ℹ️ $1${RESET}"
+}
+
+# Función para imprimir errores
+error_msg() {
+  echo -e "${RED}❌ $1${RESET}"
+}
+
+# Función para ejecutar comandos
+run_command() {
+  local command="$1"
+  local hide_output="${2:-false}"
+  local error_message="${3:-Error al ejecutar: $command}"
+
+  info_msg "Ejecutando: $command"
+
+  if [ "$hide_output" = "true" ]; then
+    eval "$command" &>/dev/null &
+    local cmd_pid=$!
+    spinner $cmd_pid
+    wait $cmd_pid
+    local exit_code=$?
+    if [ $exit_code -eq 0 ]; then
+      success_msg "Comando ejecutado con éxito"
+    else
+      error_msg "$error_message"
+      exit 1
+    fi
+  else
+    if eval "$command"; then
+      success_msg "Comando ejecutado con éxito"
+    else
+      error_msg "$error_message"
+      exit 1
+    fi
+  fi
+}
+
+# Función para verificar si un paquete está instalado
+is_installed() {
+  local pkg="$1"
+  command -v "$pkg" &>/dev/null
+}
+
+# Función para seleccionar opciones
+select_option() {
+  local prompt_message="$1"
+  shift
+  local options=("$@")
+  PS3="${ORANGE}$prompt_message${NC} "
+  select opt in "${options[@]}"; do
+    if [ -n "$opt" ]; then
+      echo "$opt"
+      break
+    else
+      error_msg "Opción inválida. Inténtalo de nuevo."
+    fi
+  done
+}
+
+# =====================================================
+# 📋 FUNCIONES DE INSTALACIÓN
+# =====================================================
+
+# Verificar y crear directorios necesarios
+setup_directories() {
+  print_header "📁 Configurando directorios"
+
+  mkdir -p "$HOME/.local/share/atuin"
+  mkdir -p "$NVIM_CONFIG_DIR"
+
+  success_msg "Directorios creados correctamente"
+}
+
+# Instalar dependencias básicas
+install_basic_dependencies() {
+  print_header "🛠️ Instalando dependencias básicas"
+
+  run_command "sudo apt-get update" true
+
+  for pkg in "${APT_PACKAGES[@]}"; do
+    if dpkg -l | grep -q "$pkg"; then
+      info_msg "$pkg ya está instalado"
+    else
+      info_msg "Instalando $pkg..."
+      run_command "sudo apt-get install -y $pkg" false "Error al instalar $pkg"
+    fi
+  done
+
+    success_msg "Dependencias básicas instaladas correctamente"
+}
+
+# Instalar Rust
+install_rust() {
+  print_header "🦀 Instalando Rust"
+
+  if is_installed rustc; then
+    info_msg "Rust ya está instalado"
+  else
+    run_command "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y" false
+    run_command "source $HOME/.cargo/env"
+  fi
+
+  success_msg "Rust instalado correctamente"
+}
+
+# Clonar repositorio de dotfiles
+clone_dotfiles_repo() {
+  print_header "📦 Clonando repositorio de dotfiles"
+
+  # Guardar directorio actual
+  local current_dir=$(pwd)
+
+  # Verificar si el repositorio ya existe
+  if [ -d "$REPO_DIR" ]; then
+    info_msg "Repositorio ya clonado. Actualizando..."
+    run_command "cd $REPO_DIR && git pull" false
+  else
+    run_command "git clone -b $REPO_BRANCH --single-branch $REPO_URL $REPO_DIR" false
+  fi
+
+  # Cambiar al directorio del repositorio
+  cd "$REPO_DIR" || exit 1
+
+  success_msg "Repositorio clonado/actualizado correctamente"
+
+  # Guardamos la ubicación del repositorio clonado para su uso posterior
+  DOTFILES_PATH=$(pwd)
+}
+
+# Instalar Homebrew
+install_homebrew() {
+  print_header "🍺 Instalando Homebrew"
+
+  if ! command -v brew &>/dev/null; then
+    /bin/bash -c "$(curl -fsSL $BREW_URL)"
+    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >>~/.bashrc
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    success_msg "Homebrew instalado correctamente."
+
+    run_command "(echo 'eval \"\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\"' >> ~/.zshrc)"
+    run_command "(echo 'eval \"\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\"' >> ~/.bashrc)"
+    run_command "eval \"\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\""
+  else
+    success_msg "Homebrew ya está instalado."
+  fi
+
+}
+
+# Instalar paquetes de Homebrew
+install_brew_packages() {
+  print_header "📦 Instalando paquetes con Homebrew"
+
+  for pkg in "${BREW_PACKAGES[@]}"; do
+    echo -ne "${YELLOW}Instalando $pkg...${RESET}"
+    if brew list "$pkg" &>/dev/null; then
+      echo -e " ${GREEN}[Ya instalado]${RESET}"
+    else
+      if brew install "$pkg"; then
+        success_msg "$pkg instalado."
+      else
+        error_msg "Error al instalar $pkg"
+        # Continuar con la instalación en lugar de salir
+        info_msg "Continuando con la instalación de otros paquetes..."
+      fi
+    fi
+  done
+
+  success_msg "Paquetes de Homebrew instalados correctamente"
+}
+
+# Instalar y configurar herramientas adicionales
+install_additional_tools() {
+  print_header "🔧 Instalando herramientas adicionales"
+
+  # Instalar zoxide
+  if ! is_installed zoxide; then
+    info_msg "Instalando zoxide..."
+    run_command "curl -sSfL $ZOXIDE_URL | sh" false
+  else
+    info_msg "zoxide ya está instalado"
+  fi
+
+  # Instalar atuin - Mejorado para añadir al PATH
+  if ! is_installed atuin; then
+    info_msg "Instalando atuin..."
+    run_command "curl --proto '=https' --tlsv1.2 -LsSf $ATUIN_URL | sh" false
+
+    # Asegurar que atuin esté en el PATH y sea encontrable
+    if [[ -d "$HOME/.atuin/bin" ]]; then
+      info_msg "Configurando variables de entorno para atuin..."
+      # Añadir esto al archivo .zshenv para asegurar que esté disponible temprano
+      if ! grep -q "atuin/bin/env" "$HOME/.zshenv"; then
+        echo '. "$HOME/.atuin/bin/env"' >>"$HOME/.zshenv"
+      fi
+    fi
+  else
+    info_msg "atuin ya está instalado"
+  fi
+  
+  success_msg "Herramientas adicionales instaladas correctamente"
+}
+
+# Instalar Zinit
+install_zinit() {
+  print_header "📦 Instalando Zinit"
+
+  if [[ ! -f $HOME/.local/share/zinit/zinit.git/zinit.zsh ]]; then
+    run_command "command mkdir -p \"$HOME/.local/share/zinit\" && command chmod g-rwX \"$HOME/.local/share/zinit\"" false
+    run_command "command git clone https://github.com/zdharma-continuum/zinit \"$HOME/.local/share/zinit/zinit.git\"" false
+    success_msg "Zinit instalado correctamente"
+  else
+    info_msg "Zinit ya está instalado"
+  fi
+}
+
+# Configurar dotfiles con stow
+stow_dotfiles() {
+  print_header "🔗 Configurando dotfiles con stow"
+
+  # Cambiar al directorio del repositorio
+  cd "$DOTFILES_PATH" || exit 1
+
+  # Crear directorio de backup con timestamp
+  BACKUP_DIR="$HOME/backup-$(date +%Y%m%d_%H%M%S)"
+
+  # Backup de directorios/archivos existentes
+  for dir in "${STOW_DIRECTORIES[@]}"; do
+    case $dir in
+      nvim)
+        targets=("$HOME/.config/nvim")
+        ;;
+      zsh)
+        targets=("$HOME/.zsh" "$HOME/.zshrc")
+        ;;
+      prompt)
+        targets=("$HOME/.config/php.omp.json")
+        ;;
+      *)
+        targets=()
+        ;;
+    esac
+
+    for target in "${targets[@]}"; do
+      if [ -e "$target" ]; then
+        mkdir -p "$BACKUP_DIR"
+        mv "$target" "$BACKUP_DIR/$(basename "$target")"
+        info_msg "Backup de $target a $BACKUP_DIR/"
+      fi
+    done
+  done
+
+  # Ejecutar stow para cada directorio
+  for dir in "${STOW_DIRECTORIES[@]}"; do
+    run_command "stow $dir" false
+  done
+
+  if [ -d "$BACKUP_DIR" ]; then
+    info_msg "Backups guardados en: $BACKUP_DIR"
+  fi
+
+  success_msg "Dotfiles configurados correctamente con stow"
+}
+
+# Establecer shell por defecto
+set_default_shell() {
+  print_header "🐚 Estableciendo shell por defecto"
+
+  local shell_name="zsh"
+  local shell_path
+  shell_path=$(which "$shell_name")
+
+  if [ -n "$shell_path" ]; then
+    # Añadir shell a /etc/shells si no existe
+    run_command "grep -Fxq \"$shell_path\" /etc/shells || sudo sh -c \"echo $shell_path >> /etc/shells\"" true
+
+    # Cambiar shell por defecto
+    run_command "sudo chsh -s $shell_path $USER" false
+
+    if [ "$SHELL" != "$shell_path" ]; then
+      info_msg "Es posible que necesites reiniciar para que los cambios surtan efecto"
+      info_msg "Comando para cambiar shell manualmente: sudo chsh -s $shell_path \$USER"
+    else
+      success_msg "Shell cambiado a $shell_path correctamente"
+    fi
+  else
+    error_msg "Shell $shell_name no encontrado"
+  fi
+}
+
+# Limpiar después de la instalación
+cleanup() {
+  print_header "🧹 Limpiando"
+
+  # Asegurar permisos correctos para Homebrew
+  if command -v brew &>/dev/null; then
+    run_command "sudo chown -R $(whoami) $(brew --prefix)/*" false
+  fi
+
+  # Volver al directorio original si es necesario
+  if [ -n "$ORIGINAL_DIR" ] && [ -d "$ORIGINAL_DIR" ]; then
+    cd "$ORIGINAL_DIR"
+  fi
+
+  success_msg "Limpieza completada"
+}
+
+# =====================================================
+# 🚀 FUNCIÓN PRINCIPAL
+# =====================================================
+
+main() {
+  echo -e "${PURPLE}${BOLD}🚀 Bienvenido al Instalador Moderno de Dotfiles${RESET}"
+  echo -e "${BLUE}Configurando tu entorno de desarrollo con estilo...${RESET}"
+  echo
+
+  print_header "🚀 Iniciando instalación de dotfiles"
+
+  # Guardar directorio original
+  ORIGINAL_DIR=$(pwd)
+
+  # Verificar si se ejecuta como root
+  if [ "$(id -u)" -eq 0 ]; then
+    error_msg "Este script no debe ser ejecutado como root"
+    exit 1
+  fi
+
+  # Ejecutar los pasos de instalación
+  setup_directories
+  install_basic_dependencies
+  install_rust
+  clone_dotfiles_repo
+  install_homebrew
+  install_brew_packages
+  install_additional_tools
+  install_zinit
+  stow_dotfiles
+  set_default_shell
+  cleanup
+
+  print_header "🎉 ¡Instalación completada con éxito!"
+  echo -e "${BOLD}${GREEN}Para aplicar todos los cambios, cierre y vuelva a abrir su terminal${RESET}"
+  echo -e "${BOLD}${GREEN}O ejecute: exec zsh${RESET}"
+  echo -e "${BOLD}${YELLOW}Personaliza tus configuraciones en: ${RESET}${BOLD}~/dots.config/${RESET}"
+
+  # Asegurar que estemos usando zsh al final
+  if [ -x "$(command -v zsh)" ]; then
+    echo -e "\n${YELLOW}Iniciando nueva sesión de zsh...${RESET}"
+    sleep 1
+    # Usar esta técnica para asegurar que exec zsh se ejecute como el último comando
+    exec zsh -l
+  else
+    echo -e "\n${RED}zsh no está disponible. Por favor instálelo e inicie una nueva sesión.${RESET}"
+  fi
+}
+
+# Ejecutar función principal
+main

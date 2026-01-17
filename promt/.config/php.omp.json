@@ -1,0 +1,131 @@
+{
+  "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
+  "palette": {
+    "text": "#FDF0ED",
+    "subtle": "#8B949E",
+    "accent": "#58A6FF",
+    "muted": "#6E7681",
+    "success": "#3FB950",
+    "warn": "#FFD43B",
+    "error": "#F85149",
+    "cyan": "#26BBD9",
+    "green": "#29D398",
+    "background": "#242a30"
+  },
+  "blocks": [
+    {
+      "type": "prompt",
+      "alignment": "left",
+      "newline": true,
+      "segments": [
+        {
+          "background": "transparent",
+          "foreground": "p:text",
+          "style": "plain",
+          "template": "\u250c",
+          "type": "text"
+        },
+        {
+          "background": "p:background",
+          "foreground": "p:text",
+          "properties": {
+            "windows": "\ue62a",
+            "linux": "\uf17c",
+            "ubuntu": "\uf31b",
+            "macos": "\uf179"
+          },
+          "style": "plain",
+          "template": " {{.Icon}} ",
+          "type": "os"
+        },
+        {
+          "background": "transparent",
+          "foreground": "p:background",
+          "style": "plain",
+          "template": "\u2800",
+          "type": "text"
+        },
+        {
+          "background": "transparent",
+          "foreground": "p:white",
+          "properties": {
+            "folder_icon": "\uf07b ",
+            "folder_separator_template": "/ ",
+            "home_icon": " ",
+            "style": "agnoster"
+          },
+          "style": "plain",
+          "template": "<p:white>[</> {{.Path}} <p:white>]</> ",
+          "type": "path"
+        },
+        {
+          "type": "git",
+          "style": "plain",
+          "foreground": "p:green",
+          "properties": {
+            "branch_icon": " "
+          },
+          "template": "{{ .HEAD }}"
+        },
+        {
+          "background": "transparent",
+          "foreground": "p:background",
+          "style": "plain",
+          "template": "\u2800",
+          "type": "text"
+        },
+        {
+          "type": "node",
+          "style": "plain",
+          "background": "p:background",
+          "padding": 1,
+          "foreground": "p:green",
+          "properties": {
+            "display_version": true
+          },
+          "template": "  {{ .Full }} "
+        }
+      ]
+    },
+    {
+      "type": "prompt",
+      "alignment": "left",
+      "newline": true,
+      "segments": [
+        {
+          "background": "transparent",
+          "foreground": "p:white",
+          "foreground_templates": [
+            "{{if eq .Code 0}}{{end}}"
+          ],
+          "properties": {
+            "always_enabled": true
+          },
+          "style": "plain",
+          "template": "<p:white>\u2514",
+          "type": "status"
+        },
+        {
+          "background": "transparent",
+          "foreground": "p:white",
+          "foreground_templates": [
+            "{{if gt .Code 0}}#ff3030{{end}}"
+          ],
+          "properties": {
+            "always_enabled": true
+          },
+          "style": "plain",
+          "template": "\u276f",
+          "type": "status"
+        }
+      ]
+    }
+  ],
+  "transient_prompt": {
+    "background": "transparent",
+    "foreground": "p:accent",
+    "template": "›  "
+  },
+  "console_title_template": "{{ .Folder }}",
+  "version": 3
+}
