@@ -58,3 +58,7 @@ load_module "$ZSH_LIB_DIR/lazy_load.zsh"
 # Config personalizada
 DOTS_CONFIG_DIR="$HOME/dots.config"
 [[ -f "$DOTS_CONFIG_DIR/shell/zsh_custom.zsh" ]] && source "$DOTS_CONFIG_DIR/shell/zsh_custom.zsh"
+
+. "$HOME/.atuin/bin/env"
+
+eval "$(atuin init zsh)"
