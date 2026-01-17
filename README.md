@@ -1,5 +1,3 @@
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Pblo16/pablo.dots)
-
 # Pablo.dots
 
 Mi configuracion de Linux para la terminal
