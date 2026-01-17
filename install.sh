@@ -332,7 +332,7 @@ stow_dotfiles() {
         targets=("$HOME/.config/nvim")
         ;;
       zsh)
-        targets=("$HOME/.zsh" "$HOME/.zshrc")
+        targets=("$HOME/.zsh" "$HOME/.zshrc"  "$HOME/.zshenv")
         ;;
       prompt)
         targets=("$HOME/.config/php.omp.json")
