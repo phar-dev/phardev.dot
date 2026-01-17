@@ -15,7 +15,7 @@ Mi configuracion de Linux para la terminal
 Instrucciones para instalar el proyecto.
 
 ```bash
-curl -O https://raw.githubusercontent.com/phar-dev/phardev.dot/refs/heads/main/install.sh
+curl -O https://raw.githubusercontent.com/phar-dev/phardev.dot/refs/heads/master/install.sh
 sudo chmod +x install.sh
 bash install.sh
 ```
