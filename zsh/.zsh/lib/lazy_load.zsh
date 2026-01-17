@@ -158,24 +158,6 @@ function docker() {
   docker "$@"
 }
 
-# Atuin lazy loading
-function atuin_lazy_load() {
-  if command -v atuin >/dev/null 2>&1 && [[ -z "$ATUIN_INIT" ]]; then
-    if [[ -f "$HOME/.atuin/bin/env" ]]; then
-      . "$HOME/.atuin/bin/env"
-      eval "$(atuin init zsh)"
-    elif [[ -d "$HOME/.local/share/atuin" ]]; then
-      export PATH="$HOME/.local/share/atuin:$PATH"
-      eval "$(atuin init zsh)"
-    else
-      eval "$(atuin init zsh)"
-    fi
-    export ATUIN_INIT=1
-    add-zsh-hook -d preexec atuin_lazy_load
-  fi
-}
-add-zsh-hook preexec atuin_lazy_load
-
 # Agrega tus lazy loads personalizados aquí
 # Ejemplo:
 # function lazy_load_custom() {
