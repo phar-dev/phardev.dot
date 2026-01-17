@@ -169,7 +169,6 @@ setup_directories() {
   print_header "📁 Configurando directorios"
 
   mkdir -p "$HOME/.local/share/atuin"
-  mkdir -p "$NVIM_CONFIG_DIR"
 
   success_msg "Directorios creados correctamente"
 }
