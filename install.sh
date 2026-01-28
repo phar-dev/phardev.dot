@@ -38,6 +38,7 @@ BREW_PACKAGES=(
   "lazygit"
   "fzf"
   "go"
+  "anomalyco/tap/opencode"
 )
 
 APT_PACKAGES=(
@@ -55,7 +56,8 @@ APT_PACKAGES=(
 STOW_DIRECTORIES=(
   "nvim"
   "zsh"
-  "promt"
+  "prompt"
+  "opencode"
 )
 
 # Directorios
@@ -160,6 +162,25 @@ select_option() {
   done
 }
 
+# Función para seleccionar herramientas de lenguajes
+select_language_tools() {
+  print_header "💻 Selección de Lenguajes de Programación"
+  echo -e "${YELLOW}Herramientas de desarrollo opcionales:${RESET}"
+  echo
+
+  # Rust
+  echo -e "${BLUE}¿Instalar Rust?${RESET}"
+  INSTALL_RUST=$(select_option "¿Instalar Rust?" "Sí" "No")
+
+  # Go
+  echo -e "${BLUE}¿Instalar Go?${RESET}"
+  INSTALL_GO=$(select_option "¿Instalar Go?" "Sí" "No")
+
+  # Node.js tools
+  echo -e "${BLUE}¿Instalar herramientas de Node.js? (fnm, pnpm)${RESET}"
+  INSTALL_NODE=$(select_option "¿Instalar Node.js tools?" "Sí" "No")
+}
+
 # =====================================================
 # 📋 FUNCIONES DE INSTALACIÓN
 # =====================================================
@@ -252,7 +273,22 @@ install_homebrew() {
 install_brew_packages() {
   print_header "📦 Instalando paquetes con Homebrew"
 
-  for pkg in "${BREW_PACKAGES[@]}"; do
+  # Filter packages based on user selection
+  local packages_to_install=()
+
+  # Always install these core tools
+  packages_to_install+=("neovim" "gh" "ripgrep" "jandedobbeleer/oh-my-posh/oh-my-posh" "lazygit" "fzf" "anomalyco/tap/opencode")
+
+  # Conditional packages
+  if [ "$INSTALL_GO" = "Sí" ]; then
+    packages_to_install+=("go")
+  fi
+
+  if [ "$INSTALL_NODE" = "Sí" ]; then
+    packages_to_install+=("fnm" "pnpm")
+  fi
+
+  for pkg in "${packages_to_install[@]}"; do
     echo -ne "${YELLOW}Instalando $pkg...${RESET}"
     if brew list "$pkg" &>/dev/null; then
       echo -e " ${GREEN}[Ya instalado]${RESET}"
@@ -337,6 +373,9 @@ stow_dotfiles() {
       prompt)
         targets=("$HOME/.config/php.omp.json")
         ;;
+      opencode)
+        targets=("$HOME/.config/opencode")
+        ;;
       *)
         targets=()
         ;;
@@ -353,7 +392,8 @@ stow_dotfiles() {
 
   # Ejecutar stow para cada directorio
   for dir in "${STOW_DIRECTORIES[@]}"; do
-    run_command "stow $dir" false
+    info_msg "Configurando $dir..."
+    run_command "stow --verbose $dir" false
   done
 
   if [ -d "$BACKUP_DIR" ]; then
@@ -426,10 +466,18 @@ main() {
     exit 1
   fi
 
+  # Ask for language preferences
+  select_language_tools
+
   # Ejecutar los pasos de instalación
   setup_directories
   install_basic_dependencies
-  install_rust
+  
+  # Conditional Rust installation
+  if [ "$INSTALL_RUST" = "Sí" ]; then
+    install_rust
+  fi
+  
   clone_dotfiles_repo
   install_homebrew
   install_brew_packages
