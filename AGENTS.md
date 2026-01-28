@@ -407,6 +407,19 @@ done
 echo "Validation complete"
 ```
 
+## Available Skills
+
+| Skill | Description | Documentation |
+|-------|-------------|---------------|
+| `safe-refactor` | Performs safe code refactoring with comprehensive safety measures | [SKILL.md](opencode/.config/opencode/skills/safe-refactor/SKILL.md) |
+| `command-creator` | Creates new opencode command files with proper structure | [SKILL.md](opencode/.config/opencode/skills/command-creator/SKILL.md) |
+| `git-master` | Advanced git operations and version control management | [SKILL.md](opencode/.config/opencode/skills/git-master/SKILL.md) |
+| `react-19` | React 19 patterns with React Compiler | [SKILL.md](opencode/.config/opencode/skills/react-19/SKILL.md) |
+| `shadcn` | Manages shadcn/ui components installation and usage | [SKILL.md](opencode/.config/opencode/skills/shadcn/SKILL.md) |
+| `skill-creator` | Creates new AI agent skills following the Agent Skills spec | [SKILL.md](opencode/.config/opencode/skills/skill-creator/SKILL.md) |
+| `tailwind` | Tailwind CSS patterns and best practices | [SKILL.md](opencode/.config/opencode/skills/tailwind/SKILL.md) |
+| `typescript` | TypeScript strict patterns and best practices | [SKILL.md](opencode/.config/opencode/skills/typescript/SKILL.md) |
+
 ## Editor/IDE Configuration
 
 No Cursor rules (.cursor/rules/ or .cursorrules) or Copilot instructions (.github/copilot-instructions.md) found. If you add them in the future, include their contents here.

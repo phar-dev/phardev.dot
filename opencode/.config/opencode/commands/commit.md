@@ -1,6 +1,6 @@
 ---
 description: Create a properly formatted git commit
-agent: plan
+agent: phardev
 ---
 
 Stage relevant files and create a commit with descriptive message following project conventions.
