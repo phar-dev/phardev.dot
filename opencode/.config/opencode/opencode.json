@@ -50,21 +50,5 @@
         "edit": true
       }
     }
-  },
-  "command": {
-    "component": {
-      "template": "Create a new React component named $ARGUMENTS with TypeScript support.\nInclude proper typing and basic structure.",
-      "description": "Create a new component"
-    },
-    "commit": {
-      "template": "Use the git-master skill to execute a git commit with suitable Style Classification",
-      "description": "Execute a git commit with the provided message using git-master skill",
-      "agent": "plan"
-    },
-    "execute": {
-      "template": "execute the plan",
-      "description": "Execute the current plan",
-      "agent": "build"
-    }
   }
 }
