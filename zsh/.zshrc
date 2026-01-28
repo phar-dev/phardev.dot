@@ -62,5 +62,7 @@ DOTS_CONFIG_DIR="$HOME/dots.config"
 . "$HOME/.atuin/bin/env"
 
 eval "$(atuin init zsh)"
+
 # opencode
 export PATH=/home/tiadmin/.opencode/bin:$PATH
+export EDITOR="code --wait"
