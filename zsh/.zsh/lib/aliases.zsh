@@ -12,3 +12,5 @@ alias lt='ls --tree'              # Mostrar estructura de directorios en formato
 alias n='nvim .'                  # Abrir Neovim en el directorio actual
 alias pj='cd ~/Projects && ls'    # Navegar al directorio de proyectos y listar su contenido
 alias vc='code --reuse-window .'  # Abrir VSCode en la ventana actual para el directorio actual
+
+alias oc='opencode'
