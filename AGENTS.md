@@ -5,6 +5,7 @@ This file contains guidelines for AI coding agents (such as opencode agents) wor
 ## Repository Overview
 
 This is a personal dotfiles repository containing:
+
 - Zsh shell configuration with plugins and tools
 - Neovim/LazyVim setup with custom plugins
 - Installation and setup scripts
@@ -15,6 +16,7 @@ This is a personal dotfiles repository containing:
 Since this is a dotfiles repository without traditional build systems, focus is on validation and linting:
 
 ### Global Validation
+
 ```bash
 # Run all linting checks
 ./scripts/validate.sh  # If exists, or create one
@@ -32,6 +34,7 @@ bash install.sh --dry-run  # May need to modify script
 ### Single File Testing
 
 #### Shell Scripts
+
 ```bash
 # Lint a specific script
 shellcheck zsh/.zshrc
@@ -47,6 +50,7 @@ shfmt -w zsh/.zshrc
 ```
 
 #### Lua Files (Neovim configs)
+
 ```bash
 # Lint specific Lua file
 luacheck nvim/.config/nvim/lua/config/options.lua  # If luacheck available
@@ -59,6 +63,7 @@ stylua nvim/.config/nvim/lua/plugins/ui.lua
 ```
 
 #### Configuration Files
+
 ```bash
 # Validate JSON
 python3 -m json.tool nvim/.config/nvim/lazyvim.json > /dev/null
@@ -68,6 +73,7 @@ jq . opencode/.config/opencode/opencode.json > /dev/null
 ```
 
 ### Testing Installation
+
 ```bash
 # Test Zsh config loading (in subshell)
 zsh -c "source zsh/.zshrc && echo 'Config loaded successfully'"
@@ -93,6 +99,7 @@ stow --no --verbose zsh  # Shows what would be linked
 ### Shell Scripts (Bash/Zsh)
 
 #### Structure
+
 ```bash
 #!/bin/bash
 # Description of script purpose
@@ -116,6 +123,7 @@ main "$@"
 ```
 
 #### Error Handling
+
 ```bash
 # Always use set -e for scripts
 set -e
@@ -136,6 +144,7 @@ fi
 ```
 
 #### Variables and Constants
+
 ```bash
 # Use readonly for constants
 readonly BREW_PACKAGES=("git" "zsh" "neovim")
@@ -150,6 +159,7 @@ my_function() {
 ```
 
 #### Quotes and Expansion
+
 ```bash
 # Always quote variables
 echo "Home directory: $HOME"
@@ -163,6 +173,7 @@ done
 ```
 
 #### Functions
+
 ```bash
 # Use snake_case for function names
 install_package() {
@@ -181,6 +192,7 @@ install_package() {
 ### Lua Files (Neovim Configuration)
 
 #### Module Structure
+
 ```lua
 -- plugin_name.lua
 local M = {}
@@ -200,6 +212,7 @@ return M
 ```
 
 #### Variables and Scoping
+
 ```lua
 -- Use local by default
 local api = vim.api
@@ -213,6 +226,7 @@ local DEFAULT_TIMEOUT = 1000
 ```
 
 #### Error Handling
+
 ```lua
 -- Use pcall for potentially failing operations
 local ok, result = pcall(vim.fn.system, 'git status')
@@ -226,6 +240,7 @@ assert(vim.fn.executable('git') == 1, 'git is required')
 ```
 
 #### Plugin Configuration
+
 ```lua
 -- Follow LazyVim patterns
 return {
@@ -242,6 +257,7 @@ return {
 ```
 
 #### Keymaps and Commands
+
 ```lua
 -- Consistent keymap format
 vim.keymap.set("n", "<leader>ff", function()
@@ -257,6 +273,7 @@ end, { desc = "Description of what command does" })
 ### JSON Configuration Files
 
 #### Formatting
+
 ```json
 {
   "name": "my-config",
@@ -265,14 +282,12 @@ end, { desc = "Description of what command does" })
     "enabled": true,
     "timeout": 5000
   },
-  "plugins": [
-    "plugin1",
-    "plugin2"
-  ]
+  "plugins": ["plugin1", "plugin2"]
 }
 ```
 
 #### Ordering
+
 - Alphabetical order for object keys
 - Logical grouping (metadata first, then settings, then lists)
 - Consistent indentation (2 spaces)
@@ -280,6 +295,7 @@ end, { desc = "Description of what command does" })
 ### Imports and Dependencies
 
 #### Lua Requires
+
 ```lua
 -- Group related requires
 local api = vim.api
@@ -292,6 +308,7 @@ local actions = require("telescope.actions")
 ```
 
 #### Shell Sourcing
+
 ```bash
 # Source library files first
 source "$ZSH_LIB_DIR/path.zsh"
@@ -304,6 +321,7 @@ source "$ZSH_TOOLS_DIR/prompt.zsh"
 ## File Organization
 
 ### Directory Structure
+
 ```
 .
 ├── install.sh              # Main installation script
@@ -328,6 +346,7 @@ source "$ZSH_TOOLS_DIR/prompt.zsh"
 ```
 
 ### Naming Conventions
+
 - **Directories**: lowercase, hyphens for multi-word (e.g., `my-tool`)
 - **Files**: lowercase, underscores for multi-word (e.g., `lazy_load.zsh`)
 - **Functions**: snake_case
@@ -335,6 +354,7 @@ source "$ZSH_TOOLS_DIR/prompt.zsh"
 - **Lua modules**: snake_case
 
 ### Adding New Configurations
+
 1. Check existing patterns in similar files
 2. Follow language-specific guidelines
 3. Update installation scripts if needed
@@ -346,6 +366,7 @@ source "$ZSH_TOOLS_DIR/prompt.zsh"
 ### Manual Testing Checklist
 
 #### Zsh Configuration
+
 - [ ] Source config without errors: `zsh -c "source ~/.zshrc"`
 - [ ] All plugins load correctly
 - [ ] Custom functions work
@@ -353,18 +374,21 @@ source "$ZSH_TOOLS_DIR/prompt.zsh"
 - [ ] PATH is correctly set
 
 #### Neovim Configuration
+
 - [ ] Starts without errors: `nvim --headless -c "qa"`
 - [ ] Plugins load correctly
 - [ ] Custom keymaps work
 - [ ] LSP and completion function
 
 #### Installation Script
+
 - [ ] Runs without errors in dry-run mode
 - [ ] Creates correct symlinks with stow
 - [ ] Backs up existing configs
 - [ ] Installs dependencies correctly
 
 ### Automated Validation
+
 ```bash
 # Create a simple validation script
 #!/bin/bash
@@ -388,6 +412,7 @@ echo "Validation complete"
 No Cursor rules (.cursor/rules/ or .cursorrules) or Copilot instructions (.github/copilot-instructions.md) found. If you add them in the future, include their contents here.
 
 ### Recommended Editor Setup
+
 - **Shell files**: Enable shellcheck integration
 - **Lua files**: Enable stylua formatting on save
 - **JSON files**: Enable JSON validation and formatting
@@ -396,6 +421,7 @@ No Cursor rules (.cursor/rules/ or .cursorrules) or Copilot instructions (.githu
 ## Commit Guidelines
 
 Follow the detected repository style:
+
 - **Language**: English
 - **Style**: Plain descriptive messages (e.g., "Update nvim lazy lock and config")
 - **Atomic commits**: Separate changes by concern (shell, nvim, tools)
@@ -403,3 +429,4 @@ Follow the detected repository style:
 
 This ensures AI agents can maintain your dotfiles consistently and safely.</content>
 <parameter name="filePath">AGENTS.md
+
