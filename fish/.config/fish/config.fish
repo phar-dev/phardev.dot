@@ -25,6 +25,9 @@ set -gx XDG_RUNTIME_DIR "$PREFIX/tmp/" # Definir directorio de tiempo de ejecuci
 # Configuración de PATH básico
 append_path "$HOME/.local/bin"
 
+# Laravel Herd (PHP, Composer, Laravel)
+append_path "$HOME/.config/herd-lite/bin"
+
 #-----------------------------------------
 # CARGA DE MÓDULOS Y PLUGINS
 #-----------------------------------------
