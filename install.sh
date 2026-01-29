@@ -34,7 +34,6 @@ BREW_PACKAGES=(
   "neovim"
   "gh"
   "ripgrep"
-  "jandedobbeleer/oh-my-posh/oh-my-posh"
   "lazygit"
   "fzf"
   "go"
@@ -46,7 +45,7 @@ APT_PACKAGES=(
   "curl"
   "file"
   "git"
-  "zsh"
+  "fish"
   "lsd"
   "unzip"
   "p7zip"
@@ -55,8 +54,7 @@ APT_PACKAGES=(
 
 STOW_DIRECTORIES=(
   "nvim"
-  "zsh"
-  "prompt"
+  "fish"
   "opencode"
 )
 
@@ -276,8 +274,8 @@ install_brew_packages() {
   # Filter packages based on user selection
   local packages_to_install=()
 
-  # Always install these core tools
-  packages_to_install+=("neovim" "gh" "ripgrep" "jandedobbeleer/oh-my-posh/oh-my-posh" "lazygit" "fzf" "anomalyco/tap/opencode")
+   # Always install these core tools
+   packages_to_install+=("neovim" "gh" "ripgrep" "lazygit" "fzf" "anomalyco/tap/opencode")
 
   # Conditional packages
   if [ "$INSTALL_GO" = "Sí" ]; then
@@ -318,37 +316,18 @@ install_additional_tools() {
     info_msg "zoxide ya está instalado"
   fi
 
-  # Instalar atuin - Mejorado para añadir al PATH
-  if ! is_installed atuin; then
-    info_msg "Instalando atuin..."
-    run_command "curl --proto '=https' --tlsv1.2 -LsSf $ATUIN_URL | sh" false
+   # Instalar atuin - Mejorado para añadir al PATH
+   if ! is_installed atuin; then
+     info_msg "Instalando atuin..."
+     run_command "curl --proto '=https' --tlsv1.2 -LsSf $ATUIN_URL | sh" false
 
-    # Asegurar que atuin esté en el PATH y sea encontrable
-    if [[ -d "$HOME/.atuin/bin" ]]; then
-      info_msg "Configurando variables de entorno para atuin..."
-      # Añadir esto al archivo .zshenv para asegurar que esté disponible temprano
-      if ! grep -q "atuin/bin/env" "$HOME/.zshenv"; then
-        echo '. "$HOME/.atuin/bin/env"' >>"$HOME/.zshenv"
-      fi
-    fi
-  else
-    info_msg "atuin ya está instalado"
-  fi
+     # Asegurar que atuin esté en el PATH (fish lo maneja automáticamente en config.fish)
+     success_msg "atuin instalado correctamente"
+   else
+     info_msg "atuin ya está instalado"
+   fi
   
-  success_msg "Herramientas adicionales instaladas correctamente"
-}
-
-# Instalar Zinit
-install_zinit() {
-  print_header "📦 Instalando Zinit"
-
-  if [[ ! -f $HOME/.local/share/zinit/zinit.git/zinit.zsh ]]; then
-    run_command "command mkdir -p \"$HOME/.local/share/zinit\" && command chmod g-rwX \"$HOME/.local/share/zinit\"" false
-    run_command "command git clone https://github.com/zdharma-continuum/zinit \"$HOME/.local/share/zinit/zinit.git\"" false
-    success_msg "Zinit instalado correctamente"
-  else
-    info_msg "Zinit ya está instalado"
-  fi
+   success_msg "Herramientas adicionales instaladas correctamente"
 }
 
 # Configurar dotfiles con stow
@@ -367,15 +346,12 @@ stow_dotfiles() {
       nvim)
         targets=("$HOME/.config/nvim")
         ;;
-      zsh)
-        targets=("$HOME/.zsh" "$HOME/.zshrc"  "$HOME/.zshenv")
-        ;;
-      prompt)
-        targets=("$HOME/.config/php.omp.json")
-        ;;
-      opencode)
-        targets=("$HOME/.config/opencode")
-        ;;
+       fish)
+         targets=("$HOME/.config/fish")
+         ;;
+       opencode)
+         targets=("$HOME/.config/opencode")
+         ;;
       *)
         targets=()
         ;;
@@ -407,7 +383,7 @@ stow_dotfiles() {
 set_default_shell() {
   print_header "🐚 Estableciendo shell por defecto"
 
-  local shell_name="zsh"
+  local shell_name="fish"
   local shell_path
   shell_path=$(which "$shell_name")
 
@@ -478,29 +454,28 @@ main() {
     install_rust
   fi
   
-  clone_dotfiles_repo
-  install_homebrew
-  install_brew_packages
-  install_additional_tools
-  install_zinit
-  stow_dotfiles
-  set_default_shell
-  cleanup
+   # clone_dotfiles_repo
+   install_homebrew
+   install_brew_packages
+   install_additional_tools
+   stow_dotfiles
+   set_default_shell
+   cleanup
 
-  print_header "🎉 ¡Instalación completada con éxito!"
-  echo -e "${BOLD}${GREEN}Para aplicar todos los cambios, cierre y vuelva a abrir su terminal${RESET}"
-  echo -e "${BOLD}${GREEN}O ejecute: exec zsh${RESET}"
-  echo -e "${BOLD}${YELLOW}Personaliza tus configuraciones en: ${RESET}${BOLD}~/dots.config/${RESET}"
+   print_header "🎉 ¡Instalación completada con éxito!"
+   echo -e "${BOLD}${GREEN}Para aplicar todos los cambios, cierre y vuelva a abrir su terminal${RESET}"
+   echo -e "${BOLD}${GREEN}O ejecute: exec fish${RESET}"
+   echo -e "${BOLD}${YELLOW}Personaliza tus configuraciones en: ${RESET}${BOLD}~/dots.config/${RESET}"
 
-  # Asegurar que estemos usando zsh al final
-  if [ -x "$(command -v zsh)" ]; then
-    echo -e "\n${YELLOW}Iniciando nueva sesión de zsh...${RESET}"
-    sleep 1
-    # Usar esta técnica para asegurar que exec zsh se ejecute como el último comando
-    exec zsh -l
-  else
-    echo -e "\n${RED}zsh no está disponible. Por favor instálelo e inicie una nueva sesión.${RESET}"
-  fi
+   # Asegurar que estemos usando fish al final
+   if [ -x "$(command -v fish)" ]; then
+     echo -e "\n${YELLOW}Iniciando nueva sesión de fish...${RESET}"
+     sleep 1
+     # Usar esta técnica para asegurar que exec fish se ejecute como el último comando
+     exec fish -l
+   else
+     echo -e "\n${RED}fish no está disponible. Por favor instálelo e inicie una nueva sesión.${RESET}"
+   fi
 }
 
 # Ejecutar función principal
