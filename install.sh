@@ -83,7 +83,7 @@ spinner() {
   local pid=$1
   local delay=0.1
   local spinstr='|/-\'
-  while ps -p $pid > /dev/null; do
+  while ps -p $pid >/dev/null; do
     local temp=${spinstr#?}
     printf " [%c]  " "$spinstr"
     local spinstr=$temp${spinstr%"$temp"}
@@ -207,7 +207,7 @@ install_basic_dependencies() {
     fi
   done
 
-    success_msg "Dependencias básicas instaladas correctamente"
+  success_msg "Dependencias básicas instaladas correctamente"
 }
 
 # Instalar Rust
@@ -274,8 +274,8 @@ install_brew_packages() {
   # Filter packages based on user selection
   local packages_to_install=()
 
-   # Always install these core tools
-   packages_to_install+=("neovim" "gh" "ripgrep" "lazygit" "fzf" "anomalyco/tap/opencode")
+  # Always install these core tools
+  packages_to_install+=("neovim" "gh" "ripgrep" "lazygit" "fzf" "anomalyco/tap/opencode")
 
   # Conditional packages
   if [ "$INSTALL_GO" = "Sí" ]; then
@@ -316,18 +316,18 @@ install_additional_tools() {
     info_msg "zoxide ya está instalado"
   fi
 
-   # Instalar atuin - Mejorado para añadir al PATH
-   if ! is_installed atuin; then
-     info_msg "Instalando atuin..."
-     run_command "curl --proto '=https' --tlsv1.2 -LsSf $ATUIN_URL | sh" false
+  # Instalar atuin - Mejorado para añadir al PATH
+  if ! is_installed atuin; then
+    info_msg "Instalando atuin..."
+    run_command "curl --proto '=https' --tlsv1.2 -LsSf $ATUIN_URL | sh" false
 
-     # Asegurar que atuin esté en el PATH (fish lo maneja automáticamente en config.fish)
-     success_msg "atuin instalado correctamente"
-   else
-     info_msg "atuin ya está instalado"
-   fi
-  
-   success_msg "Herramientas adicionales instaladas correctamente"
+    # Asegurar que atuin esté en el PATH (fish lo maneja automáticamente en config.fish)
+    success_msg "atuin instalado correctamente"
+  else
+    info_msg "atuin ya está instalado"
+  fi
+
+  success_msg "Herramientas adicionales instaladas correctamente"
 }
 
 # Configurar dotfiles con stow
@@ -343,18 +343,18 @@ stow_dotfiles() {
   # Backup de directorios/archivos existentes
   for dir in "${STOW_DIRECTORIES[@]}"; do
     case $dir in
-      nvim)
-        targets=("$HOME/.config/nvim")
-        ;;
-       fish)
-         targets=("$HOME/.config/fish")
-         ;;
-       opencode)
-         targets=("$HOME/.config/opencode")
-         ;;
-      *)
-        targets=()
-        ;;
+    nvim)
+      targets=("$HOME/.config/nvim")
+      ;;
+    fish)
+      targets=("$HOME/.config/fish")
+      ;;
+    opencode)
+      targets=("$HOME/.config/opencode")
+      ;;
+    *)
+      targets=()
+      ;;
     esac
 
     for target in "${targets[@]}"; do
@@ -448,34 +448,34 @@ main() {
   # Ejecutar los pasos de instalación
   setup_directories
   install_basic_dependencies
-  
+
   # Conditional Rust installation
   if [ "$INSTALL_RUST" = "Sí" ]; then
     install_rust
   fi
-  
-   clone_dotfiles_repo
-   install_homebrew
-   install_brew_packages
-   install_additional_tools
-   stow_dotfiles
-   set_default_shell
-   cleanup
 
-   print_header "🎉 ¡Instalación completada con éxito!"
-   echo -e "${BOLD}${GREEN}Para aplicar todos los cambios, cierre y vuelva a abrir su terminal${RESET}"
-   echo -e "${BOLD}${GREEN}O ejecute: exec fish${RESET}"
-   echo -e "${BOLD}${YELLOW}Personaliza tus configuraciones en: ${RESET}${BOLD}~/dots.config/${RESET}"
+  clone_dotfiles_repo
+  install_homebrew
+  install_brew_packages
+  install_additional_tools
+  stow_dotfiles
+  set_default_shell
+  cleanup
 
-   # Asegurar que estemos usando fish al final
-   if [ -x "$(command -v fish)" ]; then
-     echo -e "\n${YELLOW}Iniciando nueva sesión de fish...${RESET}"
-     sleep 1
-     # Usar esta técnica para asegurar que exec fish se ejecute como el último comando
-     exec fish -l
-   else
-     echo -e "\n${RED}fish no está disponible. Por favor instálelo e inicie una nueva sesión.${RESET}"
-   fi
+  print_header "🎉 ¡Instalación completada con éxito!"
+  echo -e "${BOLD}${GREEN}Para aplicar todos los cambios, cierre y vuelva a abrir su terminal${RESET}"
+  echo -e "${BOLD}${GREEN}O ejecute: exec fish${RESET}"
+  echo -e "${BOLD}${YELLOW}Personaliza tus configuraciones en: ${RESET}${BOLD}~/dots.config/${RESET}"
+
+  # Asegurar que estemos usando fish al final
+  if [ -x "$(command -v fish)" ]; then
+    echo -e "\n${YELLOW}Iniciando nueva sesión de fish...${RESET}"
+    sleep 1
+    # Usar esta técnica para asegurar que exec fish se ejecute como el último comando
+    exec fish -l
+  else
+    echo -e "\n${RED}fish no está disponible. Por favor instálelo e inicie una nueva sesión.${RESET}"
+  fi
 }
 
 # Ejecutar función principal
