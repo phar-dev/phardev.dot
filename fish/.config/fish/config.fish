@@ -20,7 +20,7 @@ function append_path
 end
 
 # Variables de entorno del sistema
-set -gx XDG_RUNTIME_DIR "$PREFIX/tmp/"  # Definir directorio de tiempo de ejecución XDG
+set -gx XDG_RUNTIME_DIR "$PREFIX/tmp/" # Definir directorio de tiempo de ejecución XDG
 
 # Configuración de PATH básico
 append_path "$HOME/.local/bin"
@@ -78,3 +78,7 @@ atuin init fish | source
 # OpenCode
 set -gx PATH /home/tiadmin/.opencode/bin $PATH
 set -gx EDITOR "code --wait"
+
+#Nodejs
+fnm env --use-on-cd --shell fish | source
+
