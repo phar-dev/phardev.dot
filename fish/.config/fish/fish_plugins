@@ -1,0 +1,6 @@
+# Plugins para Fisher
+# Reemplazos para los plugins de zsh
+jorgebucaran/fisher
+patrickf1/fzf.fish
+jorgebucaran/autopair.fish
+jethrokuan/z
