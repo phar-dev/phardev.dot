@@ -15,6 +15,6 @@ alias vc='code --reuse-window .' # Abrir VSCode en la ventana actual para el dir
 
 alias oc='opencode'
 
-alias sail='./vendor/bin/sail'
-alias sup='./vendor/bin/sail up -d & ./vendor/bin/sail pnpm dev'
+alias sail='sh $([ -f sail ] && echo sail || echo vendor/bin/sail)'
 
+alias lg='lazygit'

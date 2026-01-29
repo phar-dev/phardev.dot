@@ -76,6 +76,8 @@ end
 # HERRAMIENTAS EXTERNAS
 #-----------------------------------------
 # Atuin
+set -Ux fish_user_paths $HOME/.atuin/bin $fish_user_paths
+
 atuin init fish | source
 
 # OpenCode
@@ -85,3 +87,10 @@ set -gx EDITOR "code --wait"
 #Nodejs
 fnm env --use-on-cd --shell fish | source
 
+#-----------------------------------------
+# TMUX DEFAULT SESSION
+#-----------------------------------------
+# Launch tmux if interactive and not already in tmux
+if status is-interactive; and not set -q TMUX
+  tmux attach-session 2>/dev/null || tmux new-session -s default
+end

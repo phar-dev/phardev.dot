@@ -41,21 +41,23 @@ BREW_PACKAGES=(
 )
 
 APT_PACKAGES=(
-  "build-essential"
-  "curl"
-  "file"
-  "git"
-  "fish"
-  "lsd"
-  "unzip"
-  "p7zip"
-  "stow"
+"build-essential"
+"curl"
+"file"
+"git"
+"fish"
+"lsd"
+"unzip"
+"p7zip"
+"stow"
+"tmux"
 )
 
 STOW_DIRECTORIES=(
-  "nvim"
-  "fish"
-  "opencode"
+"nvim"
+"fish"
+"opencode"
+"tmux"
 )
 
 # Directorios
@@ -351,6 +353,9 @@ stow_dotfiles() {
       ;;
     opencode)
       targets=("$HOME/.config/opencode")
+      ;;
+    tmux)
+      targets=("$HOME/.tmux.conf")
       ;;
     *)
       targets=()

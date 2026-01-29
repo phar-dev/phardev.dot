@@ -6,7 +6,7 @@ set -e
 # Constants
 readonly SCRIPT_NAME="stow-sync"
 readonly SCRIPT_VERSION="1.0.0"
-readonly STOW_DIRS=("zsh" "nvim" "opencode" "promt")
+readonly STOW_DIRS=("zsh" "nvim" "opencode" "promt" "tmux")
 
 # Colors for output
 readonly RED='\033[0;31m'
