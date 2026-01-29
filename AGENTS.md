@@ -1,12 +1,12 @@
 # AGENTS.md - Guidelines for AI Agents Working on phardev.dot
 
-This file contains guidelines for AI coding agents (such as opencode agents) working on this dotfiles repository. It ensures consistency across Zsh configurations, Neovim setup, installation scripts, and related tools.
+This file contains guidelines for AI coding agents (such as opencode agents) working on this dotfiles repository. It ensures consistency across Fish shell configurations, Neovim setup, installation scripts, and related tools.
 
 ## Repository Overview
 
 This is a personal dotfiles repository containing:
 
-- Zsh shell configuration with plugins and tools
+- Fish shell configuration with plugins and tools
 - Neovim/LazyVim setup with custom plugins
 - Installation and setup scripts
 - AI tool configurations (opencode)
@@ -22,13 +22,16 @@ Since this is a dotfiles repository without traditional build systems, focus is 
 ./scripts/validate.sh  # If exists, or create one
 
 # Check all shell scripts
-find . -name "*.sh" -o -name "*.zsh" | xargs shellcheck
+find . -name "*.sh" | xargs shellcheck
+
+# Check all Fish scripts
+find . -name "*.fish" | xargs fish --print-debug-level 0 -c "source {}" 2>&1 | grep -E "(error|Error)"
 
 # Check all Lua files
 find . -name "*.lua" | xargs stylua --check
 
-# Dry run installation (if safe)
-bash install.sh --dry-run  # May need to modify script
+# Validate JSON files
+find . -name "*.json" | xargs python3 -m json.tool > /dev/null
 ```
 
 ### Single File Testing
@@ -37,26 +40,27 @@ bash install.sh --dry-run  # May need to modify script
 
 ```bash
 # Lint a specific script
-shellcheck zsh/.zshrc
+shellcheck install.sh
 
 # Syntax check only
 bash -n install.sh
+```
 
-# Format check with shfmt
-shfmt -d zsh/.zshrc  # Shows diff if not formatted
+#### Fish Scripts
 
-# Format and write back
-shfmt -w zsh/.zshrc
+```bash
+# Syntax check a fish function
+fish -n fish/.config/fish/functions/aliases.fish
+
+# Test fish config loading
+fish -c "source fish/.config/fish/config.fish && echo 'Config loaded successfully'"
 ```
 
 #### Lua Files (Neovim configs)
 
 ```bash
 # Lint specific Lua file
-luacheck nvim/.config/nvim/lua/config/options.lua  # If luacheck available
-
-# Format check
-stylua --check nvim/.config/nvim/lua/plugins/ui.lua
+stylua --check nvim/.config/nvim/lua/config/options.lua
 
 # Format and write
 stylua nvim/.config/nvim/lua/plugins/ui.lua
@@ -66,23 +70,26 @@ stylua nvim/.config/nvim/lua/plugins/ui.lua
 
 ```bash
 # Validate JSON
-python3 -m json.tool nvim/.config/nvim/lazyvim.json > /dev/null
+python3 -m json.tool opencode/.config/opencode/opencode.json > /dev/null
 
-# Check opencode config
-jq . opencode/.config/opencode/opencode.json > /dev/null
+# Check fish plugins file
+fish -c "fisher list" 2>/dev/null || echo "Fisher plugins need validation"
 ```
 
 ### Testing Installation
 
 ```bash
-# Test Zsh config loading (in subshell)
-zsh -c "source zsh/.zshrc && echo 'Config loaded successfully'"
+# Test Fish config loading
+fish -c "source ~/.config/fish/config.fish && echo 'Config loaded successfully'"
 
 # Test Neovim startup (headless)
-nvim --headless -c "lua require('config.lazy')" -c "qa" 2>&1
+nvim --headless -c "lua require('config.lazy')" -c "qa"
 
 # Validate stow targets
-stow --no --verbose zsh  # Shows what would be linked
+stow --no --verbose fish  # Shows what would be linked
+
+# Test fisher plugins
+fish -c "fisher list"
 ```
 
 ## Code Style Guidelines
@@ -96,97 +103,90 @@ stow --no --verbose zsh  # Shows what would be linked
 - **No Trailing Whitespace**: Enforce with editorconfig or linting
 - **Meaningful Names**: Use descriptive names, avoid abbreviations unless widely understood
 
-### Shell Scripts (Bash/Zsh)
+### Fish Shell Scripts
 
 #### Structure
 
-```bash
-#!/bin/bash
+```fish
 # Description of script purpose
 
 # Constants in UPPERCASE
-readonly SCRIPT_VERSION="1.0.0"
-readonly CONFIG_DIR="${HOME}/.config"
+set -g SCRIPT_VERSION "1.0.0"
+set -g CONFIG_DIR "$HOME/.config"
 
 # Functions before main logic
-setup_directories() {
-  mkdir -p "$CONFIG_DIR"
-}
+function setup_directories
+    mkdir -p $CONFIG_DIR
+end
 
-main() {
-  setup_directories
-  # Main logic here
-}
+function main
+    setup_directories
+    # Main logic here
+end
 
 # Execute main function
-main "$@"
+main $argv
 ```
 
 #### Error Handling
 
-```bash
-# Always use set -e for scripts
-set -e
-
-# Custom error handling
-error_exit() {
-  echo "Error: $1" >&2
-  exit 1
-}
+```fish
+# Use status for exit codes
+function setup_directories
+    if not mkdir -p $dir
+        echo "Error: Failed to create directory: $dir" >&2
+        return 1
+    end
+end
 
 # Check commands exist
-command -v git >/dev/null || error_exit "git is required"
-
-# Handle failures gracefully
-if ! mkdir -p "$dir"; then
-  error_exit "Failed to create directory: $dir"
-fi
+if not command -v git >/dev/null
+    echo "Error: git is required" >&2
+    exit 1
+end
 ```
 
-#### Variables and Constants
+#### Variables and Scoping
 
-```bash
-# Use readonly for constants
-readonly BREW_PACKAGES=("git" "zsh" "neovim")
+```fish
+# Global variables with -g
+set -g CONFIG_DIR "$HOME/.config"
 
-# Local variables in functions
-my_function() {
-  local temp_file
-  temp_file=$(mktemp)
-  # Use temp_file
-  rm -f "$temp_file"
-}
+# Local variables in functions (default)
+function my_function
+    set temp_file (mktemp)
+    # Use temp_file
+    rm -f $temp_file
+end
 ```
 
-#### Quotes and Expansion
+#### Functions
 
-```bash
+```fish
+# Use snake_case for function names
+function install_package --description "Install package using system package manager"
+    set package_name $argv[1]
+    # Function body
+end
+
+# Document parameters with --description
+function setup_config --description "Setup configuration with backup"
+    # Implementation
+end
+```
+
+#### String Handling
+
+```fish
 # Always quote variables
 echo "Home directory: $HOME"
 mkdir -p "$CONFIG_DIR/plugins"
 
 # Use arrays for lists
-tools=("zsh" "git" "nvim")
-for tool in "${tools[@]}"; do
-  echo "Installing $tool"
-done
-```
-
-#### Functions
-
-```bash
-# Use snake_case for function names
-install_package() {
-  local package_name="$1"
-  # Function body
-}
-
-# Document parameters and return values
-# install_package package_name
-# Installs the specified package using the system package manager
-install_package() {
-  # Implementation
-}
+set tools zsh git nvim
+for tool in $tools
+    echo "Installing $tool"
+end
 ```
 
 ### Lua Files (Neovim Configuration)
@@ -256,20 +256,6 @@ return {
 }
 ```
 
-#### Keymaps and Commands
-
-```lua
--- Consistent keymap format
-vim.keymap.set("n", "<leader>ff", function()
-  require("telescope.builtin").find_files()
-end, { desc = "Find files" })
-
--- Use descriptive descriptions
-vim.api.nvim_create_user_command("MyCommand", function()
-  -- Implementation
-end, { desc = "Description of what command does" })
-```
-
 ### JSON Configuration Files
 
 #### Formatting
@@ -307,15 +293,15 @@ local telescope = require("telescope")
 local actions = require("telescope.actions")
 ```
 
-#### Shell Sourcing
+#### Fish Sourcing
 
-```bash
-# Source library files first
-source "$ZSH_LIB_DIR/path.zsh"
-source "$ZSH_LIB_DIR/aliases.zsh"
+```fish
+# Source function files first
+source "$FISH_FUNCTIONS_DIR/aliases.fish"
+source "$FISH_FUNCTIONS_DIR/navigation.fish"
 
 # Then tool-specific configs
-source "$ZSH_TOOLS_DIR/prompt.zsh"
+source "$FISH_CONFIG_DIR/conf.d/fzf.fish"
 ```
 
 ## File Organization
@@ -326,12 +312,14 @@ source "$ZSH_TOOLS_DIR/prompt.zsh"
 .
 ├── install.sh              # Main installation script
 ├── README.md               # Documentation
-├── zsh/                    # Zsh configuration
-│   ├── .zshrc             # Main config
-│   ├── .zsh/              # Support files
-│   │   ├── lib/           # Core libraries
-│   │   └── tools/         # Tool-specific configs
-│   └── .zshenv            # Environment variables
+├── fish/                   # Fish configuration
+│   └── .config/
+│       └── fish/
+│           ├── config.fish
+│           ├── fish_plugins
+│           ├── functions/   # Core functions
+│           ├── completions/ # Completions
+│           └── conf.d/      # Configuration snippets
 ├── nvim/                   # Neovim configuration
 │   └── .config/
 │       └── nvim/
@@ -348,8 +336,8 @@ source "$ZSH_TOOLS_DIR/prompt.zsh"
 ### Naming Conventions
 
 - **Directories**: lowercase, hyphens for multi-word (e.g., `my-tool`)
-- **Files**: lowercase, underscores for multi-word (e.g., `lazy_load.zsh`)
-- **Functions**: snake_case
+- **Files**: lowercase, underscores for multi-word (e.g., `fish_prompt.fish`)
+- **Functions**: snake_case for Fish functions, camelCase for Lua
 - **Variables**: snake_case, UPPERCASE for constants
 - **Lua modules**: snake_case
 
@@ -365,13 +353,13 @@ source "$ZSH_TOOLS_DIR/prompt.zsh"
 
 ### Manual Testing Checklist
 
-#### Zsh Configuration
+#### Fish Configuration
 
-- [ ] Source config without errors: `zsh -c "source ~/.zshrc"`
-- [ ] All plugins load correctly
-- [ ] Custom functions work
-- [ ] Aliases are available
+- [ ] Source config without errors: `fish -c "source ~/.config/fish/config.fish"`
+- [ ] All functions load correctly
+- [ ] Plugins work (fisher list)
 - [ ] PATH is correctly set
+- [ ] Aliases are available
 
 #### Neovim Configuration
 
@@ -395,8 +383,17 @@ source "$ZSH_TOOLS_DIR/prompt.zsh"
 set -e
 
 echo "Validating shell scripts..."
-find . -name "*.sh" -o -name "*.zsh" | while read -r file; do
+find . -name "*.sh" | while read -r file; do
   shellcheck "$file" || echo "Failed: $file"
+done
+
+echo "Validating Fish scripts..."
+find . -name "*.fish" | while read -r file; do
+  if fish -n "$file"; then
+    echo "OK: $file"
+  else
+    echo "Failed: $file"
+  fi
 done
 
 echo "Validating Lua files..."
@@ -427,6 +424,7 @@ No Cursor rules (.cursor/rules/ or .cursorrules) or Copilot instructions (.githu
 ### Recommended Editor Setup
 
 - **Shell files**: Enable shellcheck integration
+- **Fish files**: Enable fish syntax highlighting
 - **Lua files**: Enable stylua formatting on save
 - **JSON files**: Enable JSON validation and formatting
 - **Line endings**: Ensure LF (Unix) for all files
@@ -437,9 +435,8 @@ Follow the detected repository style:
 
 - **Language**: English
 - **Style**: Plain descriptive messages (e.g., "Update nvim lazy lock and config")
-- **Atomic commits**: Separate changes by concern (shell, nvim, tools)
+- **Atomic commits**: Separate changes by concern (fish, nvim, tools)
 - **Reference issues**: Include issue numbers when applicable
 
 This ensures AI agents can maintain your dotfiles consistently and safely.</content>
-<parameter name="filePath">AGENTS.md
-
+<parameter name="filePath">/home/test/phardev.dot/AGENTS.md
