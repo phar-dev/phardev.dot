@@ -454,7 +454,7 @@ main() {
     install_rust
   fi
   
-   # clone_dotfiles_repo
+   clone_dotfiles_repo
    install_homebrew
    install_brew_packages
    install_additional_tools
