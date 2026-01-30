@@ -41,13 +41,10 @@
       },
       "url": "https://api.githubcopilot.com/mcp/"
     },
-
     "n8n-mcp": {
       "type": "remote",
-      "url": "https://n8n.phardev.site/mcp-server/http",
-      "headers": {
-        "Authorization": "Bearer {env:N8N_MCP_PATH}"
-      }
+      "url": "https://api.n8n-mcp.com/mcp",
+      "enabled": true
     }
   },
   "agent": {
