@@ -1,1 +1,0 @@
-phardev.dot/tmux/.tmux

@@ -87,6 +87,11 @@ set -gx EDITOR "code --wait"
 #Nodejs
 fnm env --use-on-cd --shell fish | source
 
+# Cargar variables de entorno locales
+if test -f ~/.env
+    source ~/.env
+end
+
 #-----------------------------------------
 # TMUX DEFAULT SESSION
 #-----------------------------------------

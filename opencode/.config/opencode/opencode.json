@@ -33,6 +33,21 @@
       "type": "remote",
       "url": "https://mcp.context7.com/mcp",
       "enabled": true
+    },
+    "github": {
+      "type": "remote",
+      "headers": {
+        "Authorization": "Bearer {env:GITHUB_MCP_PATH}"
+      },
+      "url": "https://api.githubcopilot.com/mcp/"
+    },
+
+    "n8n-mcp": {
+      "type": "remote",
+      "url": "https://n8n.phardev.site/mcp-server/http",
+      "headers": {
+        "Authorization": "Bearer {env:N8N_MCP_PATH}"
+      }
     }
   },
   "agent": {
