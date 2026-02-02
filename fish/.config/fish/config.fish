@@ -19,8 +19,10 @@ function append_path
     end
 end
 
-# Variables de entorno del sistema
-set -gx XDG_RUNTIME_DIR "$PREFIX/tmp/" # Definir directorio de tiempo de ejecución XDG
+# Arreglar XDG_RUNTIME_DIR si apunta a /tmp o está mal
+if test "$XDG_RUNTIME_DIR" = /tmp/ -o "$XDG_RUNTIME_DIR" = "/run/user/(id -u)"
+    set -gx XDG_RUNTIME_DIR /run/user/(id -u)
+end
 
 # Configuración de PATH básico
 append_path "$HOME/.local/bin"
@@ -65,14 +67,6 @@ load_module "$FISH_FUNCTIONS_DIR/bindings.fish"
 # Plugins se instalarán automáticamente con fisher
 
 #-----------------------------------------
-# CONFIGURACIÓN PERSONALIZADA
-#-----------------------------------------
-set -g DOTS_CONFIG_DIR "$HOME/dots.config"
-if test -f "$DOTS_CONFIG_DIR/shell/fish_custom.fish"
-    source "$DOTS_CONFIG_DIR/shell/fish_custom.fish"
-end
-
-#-----------------------------------------
 # HERRAMIENTAS EXTERNAS
 #-----------------------------------------
 # Atuin
@@ -97,5 +91,5 @@ end
 #-----------------------------------------
 # Launch tmux if interactive and not already in tmux
 if status is-interactive; and not set -q TMUX
-  tmux attach-session 2>/dev/null || tmux new-session -s default
+    tmux attach-session 2>/dev/null || tmux new-session -s default
 end
