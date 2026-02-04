@@ -79,7 +79,12 @@ set -gx PATH /home/tiadmin/.opencode/bin $PATH
 set -gx EDITOR "code --wait"
 
 #Nodejs
-fnm env --use-on-cd --shell fish | source
+# fnm
+set FNM_PATH "/home/phardev/.fnm"
+if [ -d "$FNM_PATH" ]
+    set PATH "$FNM_PATH" $PATH
+    fnm env | source
+end
 
 # Cargar variables de entorno locales
 if test -f ~/.env
@@ -90,6 +95,9 @@ end
 # TMUX DEFAULT SESSION
 #-----------------------------------------
 # Launch tmux if interactive and not already in tmux
-if status is-interactive; and not set -q TMUX
-    tmux attach-session 2>/dev/null || tmux new-session -s default
-end
+# if status is-interactive; and not set -q TMUX
+#     tmux attach-session 2>/dev/null || tmux new-session -s default
+# end
+
+# opencode
+fish_add_path /home/phardev/.opencode/bin
