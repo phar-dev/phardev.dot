@@ -80,11 +80,7 @@ set -gx EDITOR "code --wait"
 
 #Nodejs
 # fnm
-set FNM_PATH "/home/phardev/.fnm"
-if [ -d "$FNM_PATH" ]
-    set PATH "$FNM_PATH" $PATH
-    fnm env | source
-end
+fnm env | source
 
 # Cargar variables de entorno locales
 if test -f ~/.env
