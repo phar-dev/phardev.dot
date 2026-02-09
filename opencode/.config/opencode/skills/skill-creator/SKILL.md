@@ -1,13 +1,12 @@
 ---
 name: skill-creator
-description: >
-  Creates new AI agent skills following the Agent Skills spec.
-  Trigger: When user asks to create a new skill, add agent instructions, or document patterns for AI.
+description: Creates new AI agent skills following the Agent Skills spec.
 license: Apache-2.0
 metadata:
-  author: gentleman-programming
+  author: sgc
   version: "1.0"
-allowed-tools: Read, Edit, Write, Glob, Grep, Bash, WebFetch, WebSearch, Task
+  scope: [root]
+  auto_invoke: "Creating new skills"
 ---
 
 ## When to Create a Skill
@@ -41,20 +40,6 @@ skills/{skill-name}/
 
 ---
 
-## SKILL.md Template
-
-````markdown
----
-name: { skill-name }
-description: >
-  {One-line description of what this skill does}.
-  Trigger: {When the AI should load this skill}.
-license: Apache-2.0
-metadata:
-  author: gentleman-programming
-  version: "1.0"
----
-
 ## When to Use
 
 {Bullet points of when to use this skill}
@@ -72,32 +57,28 @@ metadata:
 ```bash
 {Common commands}
 ```
-````
 
 ## Resources
 
 - **Templates**: See [assets/](assets/) for {description}
 - **Documentation**: See [references/](references/) for local docs
 
-```
-
 ---
 
 ## Naming Conventions
 
-| Type | Pattern | Examples |
-|------|---------|----------|
-| Generic skill | `{technology}` | `pytest`, `playwright`, `typescript` |
-| Prowler-specific | `prowler-{component}` | `prowler-api`, `prowler-ui`, `prowler-sdk-check` |
-| Testing skill | `prowler-test-{component}` | `prowler-test-sdk`, `prowler-test-api` |
-| Workflow skill | `{action}-{target}` | `skill-creator`, `jira-task` |
+| Type           | Pattern                | Examples                             |
+| -------------- | ---------------------- | ------------------------------------ |
+| Generic skill  | `{technology}`         | `pytest`, `playwright`, `typescript` |
+| sgc-specific   | `sgc-{component}`      | `sgc-api`, `sgc-ui`, `sgc-sdk-check` |
+| Testing skill  | `sgc-test-{component}` | `sgc-test-sdk`, `sgc-test-api`       |
+| Workflow skill | `{action}-{target}`    | `skill-creator`, `jira-task`         |
 
 ---
 
 ## Decision: assets/ vs references/
 
 ```
-
 Need code templates? → assets/
 Need JSON schemas? → assets/
 Need example configs? → assets/
@@ -110,39 +91,40 @@ Link to external guides? → references/ (with local path)
 
 ---
 
-## Decision: Prowler-Specific vs Generic
+## Decision: sgc-Specific vs Generic
 
 ```
 
 Patterns apply to ANY project? → Generic skill (e.g., pytest, typescript)
-Patterns are Prowler-specific? → prowler-{name} skill
-Generic skill needs Prowler info? → Add references/ pointing to Prowler docs
+Patterns are sgc-specific? → sgc-{name} skill
+Generic skill needs sgc info? → Add references/ pointing to sgc docs
 
-````
+```
 
 ---
 
 ## Frontmatter Fields
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `name` | Yes | Skill identifier (lowercase, hyphens) |
-| `description` | Yes | What + Trigger in one block |
-| `license` | Yes | Always `Apache-2.0` for Prowler |
-| `metadata.author` | Yes | `gentleman-programming` |
-| `metadata.version` | Yes | Semantic version as string |
+| Field              | Required | Description                           |
+| ------------------ | -------- | ------------------------------------- |
+| `name`             | Yes      | Skill identifier (lowercase, hyphens) |
+| `description`      | Yes      | What + Trigger in one block           |
+| `license`          | Yes      | Always `Apache-2.0` for sgc           |
+| `metadata.version` | Yes      | Semantic version as string            |
 
 ---
 
 ## Content Guidelines
 
 ### DO
+
 - Start with the most critical patterns
 - Use tables for decision trees
 - Keep code examples minimal and focused
 - Include Commands section with copy-paste commands
 
 ### DON'T
+
 - Add Keywords section (agent searches frontmatter, not body)
 - Duplicate content from existing docs (reference instead)
 - Include lengthy explanations (link to docs)
@@ -153,11 +135,24 @@ Generic skill needs Prowler info? → Add references/ pointing to Prowler docs
 
 ## Registering the Skill
 
-After creating the skill, add it to `AGENTS.md`:
+After creating the skill, use the `skill-registry` skill to add it to the JSON registry:
+
+```bash
+# Extract name and description from the new SKILL.md (assuming it's in skills/{skill-name}/SKILL.md)
+NAME=$(grep '^name:' skills/{skill-name}/SKILL.md | cut -d' ' -f2)
+DESC=$(grep '^description:' skills/{skill-name}/SKILL.md | cut -d' ' -f2-)
+
+# Add to registry using skill-registry commands
+jq --arg name "$NAME" --arg desc "$DESC" '.skills += [{"name": $name, "description": $desc}]' skills/skill-registry/assets/registry.json > temp.json && mv temp.json skills/skill-registry/assets/registry.json
+```
+
+This integrates with `skill-registry` to automatically update the JSON registry with the new skill's details.
+
+Optionally, also add it to `AGENTS.md`:
 
 ```markdown
 | `{skill-name}` | {Description} | [SKILL.md](skills/{skill-name}/SKILL.md) |
-````
+```
 
 ---
 
@@ -170,6 +165,7 @@ After creating the skill, add it to `AGENTS.md`:
 - [ ] Critical patterns are clear
 - [ ] Code examples are minimal
 - [ ] Commands section exists
+- [ ] Added to skill-registry JSON
 - [ ] Added to AGENTS.md
 
 ## Resources

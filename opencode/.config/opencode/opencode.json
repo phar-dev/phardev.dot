@@ -32,19 +32,20 @@
     "context7": {
       "type": "remote",
       "url": "https://mcp.context7.com/mcp",
-      "enabled": true
+      "enabled": false
     },
     "github": {
       "type": "remote",
       "headers": {
         "Authorization": "Bearer {env:GITHUB_MCP_PATH}"
       },
+      "enabled": false,
       "url": "https://api.githubcopilot.com/mcp/"
     },
     "n8n-mcp": {
       "type": "remote",
       "url": "https://api.n8n-mcp.com/mcp",
-      "enabled": true
+      "enabled": false
     }
   },
   "agent": {
