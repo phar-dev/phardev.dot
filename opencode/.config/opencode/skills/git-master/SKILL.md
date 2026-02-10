@@ -117,14 +117,10 @@ git log --oneline $(git merge-base HEAD main 2>/dev/null || git merge-base HEAD 
 
 ```
 Count from git log -30:
-- Korean characters: N commits
-- English only: M commits
-- Mixed: K commits
+- English commits: M commits
 
 DECISION:
-- If Korean >= 50% -> KOREAN
-- If English >= 50% -> ENGLISH
-- If Mixed -> Use MAJORITY language
+- ENGLISH
 ```
 
 ### 1.2 Commit Style Classification
@@ -158,8 +154,7 @@ STYLE DETECTION RESULT
 ======================
 Analyzed: 30 commits from git log
 
-Language: [KOREAN | ENGLISH]
-  - Korean commits: N (X%)
+Language: ENGLISH
   - English commits: M (Y%)
 
 Style: [SEMANTIC | PLAIN | SENTENCE | SHORT]
@@ -521,14 +516,8 @@ git log -1 --oneline
 **Based on COMMIT_CONFIG from Phase 1:**
 
 ```
-IF style == SEMANTIC AND language == KOREAN:
-  -> "feat: 로그인 기능 추가"
-
 IF style == SEMANTIC AND language == ENGLISH:
   -> "feat: add login feature"
-
-IF style == PLAIN AND language == KOREAN:
-  -> "로그인 기능 추가"
 
 IF style == PLAIN AND language == ENGLISH:
   -> "Add login feature"
@@ -1264,14 +1253,10 @@ git log --oneline $(git merge-base HEAD main 2>/dev/null || git merge-base HEAD 
 
 ```
 Count from git log -30:
-- Korean characters: N commits
-- English only: M commits
-- Mixed: K commits
+- English commits: M commits
 
 DECISION:
-- If Korean >= 50% -> KOREAN
-- If English >= 50% -> ENGLISH
-- If Mixed -> Use MAJORITY language
+- ENGLISH
 ```
 
 ### 1.2 Commit Style Classification
@@ -1305,8 +1290,7 @@ STYLE DETECTION RESULT
 ======================
 Analyzed: 30 commits from git log
 
-Language: [KOREAN | ENGLISH]
-  - Korean commits: N (X%)
+Language: ENGLISH
   - English commits: M (Y%)
 
 Style: [SEMANTIC | PLAIN | SENTENCE | SHORT]
@@ -1668,14 +1652,8 @@ git log -1 --oneline
 **Based on COMMIT_CONFIG from Phase 1:**
 
 ```
-IF style == SEMANTIC AND language == KOREAN:
-  -> "feat: 로그인 기능 추가"
-
 IF style == SEMANTIC AND language == ENGLISH:
   -> "feat: add login feature"
-
-IF style == PLAIN AND language == KOREAN:
-  -> "로그인 기능 추가"
 
 IF style == PLAIN AND language == ENGLISH:
   -> "Add login feature"
