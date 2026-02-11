@@ -1,13 +1,10 @@
 ---
 name: safe-refactor
-description: >
-  Performs safe code refactoring with comprehensive safety measures.
-  Trigger: When user asks to refactor code safely, rename functions, or restructure code.
+description: Performs safe code refactoring with comprehensive safety measures.
 license: Apache-2.0
 metadata:
   author: opencode
   version: "1.0"
-allowed-tools: Read, Edit, Glob, Grep, Bash, Task
 ---
 
 ## When to Use
@@ -105,20 +102,20 @@ function processData(data) {
 
 ```bash
 # Run tests before starting
-npm test
+pnpm test
 
 # Check linting
-npm run lint
+pnpm run lint
 
 # Type checking
-npm run typecheck
+pnpm run typecheck
 ```
 
 ### Post-Refactor Validation
 
 ```bash
 # Run all validation steps
-npm test && npm run lint && npm run typecheck
+pnpm test && pnpm run lint && pnpm run typecheck
 
 # Check for breaking changes
 git diff --name-only
