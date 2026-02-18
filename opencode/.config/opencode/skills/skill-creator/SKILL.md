@@ -1,9 +1,7 @@
 ---
 name: skill-creator
 description: Creates new AI agent skills following the Agent Skills spec.
-license: Apache-2.0
 metadata:
-  author: sgc
   version: "1.0"
   scope: [root]
   auto_invoke: "Creating new skills"

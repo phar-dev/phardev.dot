@@ -1,6 +1,6 @@
 ---
 description: Create AGENTS.md based on my workflow
-agent: build
+agent: phardev
 ---
 
 Analiza este proyecto y crea un AGENTS.md que sirva como índice/guía de navegación del sistema de skills.
@@ -23,7 +23,8 @@ Este proyecto utiliza un **sistema de skills** para organizar conocimientos y pa
 
 ### Sistema de Skills
 
-El proyecto está organizado en skills reutilizables que encapsulan conocimientos específicos:
+El proyecto está organizado en skills reutilizables que encapsulan
+conocimientos específicos:
 skills/
 ├── Generic Skills/ # Reutilizables en CUALQUIER proyecto
 ├── Architecture Patterns/ # Patrones específicos de esta arquitectura
