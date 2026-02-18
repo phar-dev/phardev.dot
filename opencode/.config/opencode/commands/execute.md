@@ -1,6 +1,6 @@
 ---
 description: Execute the current development plan
-agent: phardeb
+agent: phardev
 ---
 
 Run the planned implementation steps with $ARGUMENTS as additional context.
