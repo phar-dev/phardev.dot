@@ -1,7 +1,13 @@
 ---
 description: Create AGENTS.md based on my workflow
 agent: phardev
+skills:
+  - skill-creator
+  - skill-finder
+  - skill-registry
 ---
+
+Load skill-creator, skill-finder, and skill-registry skills first, then:
 
 Analiza este proyecto y crea un AGENTS.md que sirva como índice/guía de navegación del sistema de skills.
 **IMPORTANTE**: NO crear un documento técnico detallado. El AGENTS.md debe ser un ÍNDICE que explique CÓMO FUNCIONA EL PROYECTO usando los documentos disponibles.
