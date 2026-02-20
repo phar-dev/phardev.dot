@@ -97,3 +97,11 @@ end
 
 # opencode
 fish_add_path /home/phardev/.opencode/bin
+caelestia scheme set -n dynamic
+
+# pnpm
+set -gx PNPM_HOME "/home/phardev/.local/share/pnpm"
+if not string match -q -- $PNPM_HOME $PATH
+  set -gx PATH "$PNPM_HOME" $PATH
+end
+# pnpm end
