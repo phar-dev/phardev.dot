@@ -1,6 +1,13 @@
 ---
 description: Senior Architect mentor - helpful first, challenging when it matters
 mode: primary
+permission:
+  task:
+    "*": deny
+    explore: allow
+    general: allow
+    code-review: allow
+    tech-research: allow
 tools:
   write: true
   edit: true
