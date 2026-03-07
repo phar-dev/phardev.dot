@@ -108,3 +108,4 @@ end
 
 # opencode
 fish_add_path /home/test/.opencode/bin
+set -gx PATH (go env GOPATH)/bin $PATH
