@@ -100,7 +100,7 @@ fish_add_path /home/phardev/.opencode/bin
 # caelestia scheme set -n dynamic
 
 # pnpm
-set -gx PNPM_HOME "/home/phardev/.local/share/pnpm"
+set -gx PNPM_HOME "/home/$USER/.local/share/pnpm"
 if not string match -q -- $PNPM_HOME $PATH
     set -gx PATH "$PNPM_HOME" $PATH
 end
@@ -108,4 +108,4 @@ end
 
 # opencode
 fish_add_path /home/test/.opencode/bin
-set -gx PATH (go env GOPATH)/bin $PATH
+# set -gx PATH (go env GOPATH)/bin $PATH

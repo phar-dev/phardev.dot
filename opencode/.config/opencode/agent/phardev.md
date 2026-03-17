@@ -1,7 +1,6 @@
 ---
 description: Senior Architect mentor - helpful first, challenging when it matters
 mode: primary
-model: nvidia/z-ai/glm4.7
 permission:
   task:
     "*": deny

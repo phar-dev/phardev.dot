@@ -12,17 +12,9 @@
       "command": ["engram", "mcp"],
       "enabled": true,
       "type": "local"
-    },
-    "github": {
-      "type": "remote",
-      "headers": {
-        "Authorization": "Bearer {env:GITHUB_MCP_PATH}"
-      },
-      "enabled": false,
-      "url": "https://api.githubcopilot.com/mcp/"
     }
   },
-  "model": "opencode/big-pickle",
+  "model": "nvidia/moonshotai/kimi-k2-instruct",
   "permission": {
     "bash": {
       "*": "allow",
@@ -43,9 +35,7 @@
       "**/credentials.json": "deny"
     }
   },
-  "plugin": ["opencode-anthropic-auth"],
   "watcher": {
     "ignore": ["node_modules/**", "dist/**", ".git/**"]
   }
 }
-
