@@ -14,7 +14,7 @@
       "type": "local"
     }
   },
-  "model": "nvidia/moonshotai/kimi-k2-instruct",
+  "model": "opencode/minimax-m2.5-free",
   "permission": {
     "bash": {
       "*": "allow",
