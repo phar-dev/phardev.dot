@@ -104,8 +104,8 @@ return {
   },
   config = function()
     vim.g.opencode_opts = {
-      provider = {
-        snacks = {
+      snacks = {
+        terminal = {
           win = {
             position = "left",
           },
