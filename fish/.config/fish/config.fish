@@ -75,12 +75,18 @@ set -Ux fish_user_paths $HOME/.atuin/bin $fish_user_paths
 atuin init fish | source
 
 # OpenCode
-set -gx PATH /home/tiadmin/.opencode/bin $PATH
+set -gx PATH /home/$USER/.opencode/bin $PATH
 set -gx EDITOR "code --wait"
 
-#Nodejs
-# fnm
-fnm env | source
+#Nodejs - fnm (Fast Node Manager)
+# Agregar fnm al PATH primero
+set -gx FNM_DIR "$HOME/.local/share/fnm"
+if test -d "$FNM_DIR"
+    set -gx PATH "$FNM_DIR" $PATH
+    if command -v fnm >/dev/null
+        fnm env | source
+    end
+end
 
 # Cargar variables de entorno locales
 if test -f ~/.env
@@ -109,3 +115,6 @@ end
 # opencode
 fish_add_path /home/test/.opencode/bin
 # set -gx PATH (go env GOPATH)/bin $PATH
+
+# Auto-Warpify
+status --is-interactive; and printf 'P$f{"hook": "SourcedRcFileForWarp", "value": { "shell": "fish", "uname": "Linux" }}œ' 

@@ -1,17 +1,3 @@
-#!/usr/bin/env fish
-#!          ░▒▓
-#!        ░▒▒░▓▓
-#!      ░▒▒▒░░░▓▓           ___________
-#!    ░░▒▒▒░░░░░▓▓        //___________/
-#!   ░░▒▒▒░░░░░▓▓     _   _ _    _ _____
-#!   ░░▒▒░░░░░▓▓▓▓▓▓ | | | | |  | |  __/
-#!    ░▒▒░░░░▓▓   ▓▓ | |_| | |_/ /| |___
-#!     ░▒▒░░▓▓   ▓▓   \__  |____/ |____/  █▀▀ █ █▀ █░█
-#!       ░▒▓▓   ▓▓  //____/               █▀  █ ▄█ █▀█
-
-# HyDE's fish env configuration
-# This file is sourced by fish on startup
-
 # ensure that the XDG variables are set
 if test -z "$XDG_CONFIG_HOME"
     set -gx XDG_CONFIG_HOME "$HOME/.config"
@@ -79,6 +65,7 @@ end
 
 fish_add_path $HOME/.local/bin:$PATH
 
+# Starship prompt (solo si está instalado)
 if type -q starship
     starship init fish | source
     set -gx STARSHIP_CACHE $XDG_CACHE_HOME/starship
@@ -125,11 +112,6 @@ alias ls='eza -1 --icons=auto'
 alias ll='eza -lha --icons=auto --sort=name --group-directories-first'
 alias ld='eza -lhD --icons=auto'
 alias lt='eza --icons=auto --tree'
-alias in='hyde-shell pm install'
-alias un='hyde-shell pm remove'
-alias up='hyde-shell pm upgrade'
-alias pl='hyde-shell pm search installed'
-alias pa='hyde-shell pm search all'
 alias g='git'
 alias fastfetch='fastfetch --logo-type kitty'
 
