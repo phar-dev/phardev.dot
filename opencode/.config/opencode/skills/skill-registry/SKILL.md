@@ -35,9 +35,9 @@ No code examples needed, as this is a management skill.
 ## Commands
 
 ```bash
-# Add a new skill to the registry
-jq '.skills += [{"name": "new-skill", "description": "Description of new skill"}]' assets/registry.json > temp.json && mv temp.json assets/registry.json
+# Add a new skill to the registry (from project root)
+jq '.skills += [{"name": "new-skill", "description": "Description of new skill"}]' .agents/skills/skill-registry/assets/registry.json > temp.json && mv temp.json .agents/skills/skill-registry/assets/registry.json
 
 # Search for skills
-jq '.skills[] | select(.name | contains("search-term"))' assets/registry.json
+jq '.skills[] | select(.name | contains("search-term"))' .agents/skills/skill-registry/assets/registry.json
 ```

@@ -27,7 +27,7 @@ Create a skill when:
 ## Skill Structure
 
 ```
-skills/{skill-name}/
+.agents/skills/{skill-name}/
 ├── SKILL.md              # Required - main skill file
 ├── assets/               # Optional - templates, schemas, examples
 │   ├── template.py
@@ -65,12 +65,12 @@ skills/{skill-name}/
 
 ## Naming Conventions
 
-| Type           | Pattern                | Examples                             |
-| -------------- | ---------------------- | ------------------------------------ |
-| Generic skill  | `{technology}`         | `pytest`, `playwright`, `typescript` |
-| sgc-specific   | `sgc-{component}`      | `sgc-api`, `sgc-ui`, `sgc-sdk-check` |
-| Testing skill  | `sgc-test-{component}` | `sgc-test-sdk`, `sgc-test-api`       |
-| Workflow skill | `{action}-{target}`    | `skill-creator`, `jira-task`         |
+| Type           | Pattern                    | Examples                                  |
+| -------------- | -------------------------- | ----------------------------------------- |
+| Generic skill  | `{technology}`             | `pytest`, `playwright`, `typescript`      |
+| Project skill  | `{project}-{component}`    | `saas-api`, `saas-ui`, `saas-check`       |
+| Testing skill  | `{project}-test-{target}`  | `saas-test-sdk`, `saas-test-api`          |
+| Workflow skill | `{action}-{target}`        | `skill-creator`, `git-workflow`           |
 
 ---
 
@@ -89,14 +89,12 @@ Link to external guides? → references/ (with local path)
 
 ---
 
-## Decision: sgc-Specific vs Generic
+## Decision: Project-Specific vs Generic
 
 ```
-
 Patterns apply to ANY project? → Generic skill (e.g., pytest, typescript)
-Patterns are sgc-specific? → sgc-{name} skill
-Generic skill needs sgc info? → Add references/ pointing to sgc docs
-
+Patterns are project-specific? → {project}-{name} skill
+Generic skill needs project info? → Add references/ pointing to project docs
 ```
 
 ---
@@ -136,12 +134,12 @@ Generic skill needs sgc info? → Add references/ pointing to sgc docs
 After creating the skill, use the `skill-registry` skill to add it to the JSON registry:
 
 ```bash
-# Extract name and description from the new SKILL.md (assuming it's in skills/{skill-name}/SKILL.md)
-NAME=$(grep '^name:' skills/{skill-name}/SKILL.md | cut -d' ' -f2)
-DESC=$(grep '^description:' skills/{skill-name}/SKILL.md | cut -d' ' -f2-)
+# Extract name and description from the new SKILL.md (assuming it's in .agents/skills/{skill-name}/SKILL.md)
+NAME=$(grep '^name:' .agents/skills/{skill-name}/SKILL.md | cut -d' ' -f2)
+DESC=$(grep '^description:' .agents/skills/{skill-name}/SKILL.md | cut -d' ' -f2-)
 
 # Add to registry using skill-registry commands
-jq --arg name "$NAME" --arg desc "$DESC" '.skills += [{"name": $name, "description": $desc}]' skills/skill-registry/assets/registry.json > temp.json && mv temp.json skills/skill-registry/assets/registry.json
+jq --arg name "$NAME" --arg desc "$DESC" '.skills += [{"name": $name, "description": $desc}]' .agents/skills/skill-registry/assets/registry.json > temp.json && mv temp.json .agents/skills/skill-registry/assets/registry.json
 ```
 
 This integrates with `skill-registry` to automatically update the JSON registry with the new skill's details.
@@ -149,14 +147,14 @@ This integrates with `skill-registry` to automatically update the JSON registry 
 Optionally, also add it to `AGENTS.md`:
 
 ```markdown
-| `{skill-name}` | {Description} | [SKILL.md](skills/{skill-name}/SKILL.md) |
+| `{skill-name}` | {Description} | [.agents/skills/{skill-name}/SKILL.md](.agents/skills/{skill-name}/SKILL.md) |
 ```
 
 ---
 
 ## Checklist Before Creating
 
-- [ ] Skill doesn't already exist (check `skills/`)
+- [ ] Skill doesn't already exist (check `.agents/skills/`)
 - [ ] Pattern is reusable (not one-off)
 - [ ] Name follows conventions
 - [ ] Frontmatter is complete (description includes trigger keywords)
