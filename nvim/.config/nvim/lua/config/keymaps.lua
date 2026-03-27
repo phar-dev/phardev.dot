@@ -59,3 +59,11 @@ function SaveFile()
     vim.notify("Error: " .. err, vim.log.levels.ERROR) -- Show the error message if it fails
   end
 end
+
+vim.keymap.set("n", "<leader>dc", function()
+  local diags = vim.diagnostic.get(0, { lnum = vim.fn.line(".") - 1 })
+  if #diags > 0 then
+    vim.fn.setreg("+", diags[1].message)
+    vim.notify("Diagnostic copied to clipboard!")
+  end
+end, { desc = "Copy diagnostic message" })
