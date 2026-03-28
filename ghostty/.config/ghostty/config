@@ -16,8 +16,7 @@ font-size = 12
 # │                                  WINDOW                                      │
 # └──────────────────────────────────────────────────────────────────────────────┘
 
-background-opacity = 0.95
-background-blur-radius = 20
+background-opacity = 0.99
 
 window-decoration = true
 window-padding-color = extend
@@ -26,7 +25,7 @@ window-padding-balance = true
 window-height = 100
 window-width = 100
 
-gtk-tabs-location = hidden
+# gtk-tabs-location = hidden
 confirm-close-surface = false
 
 # ┌──────────────────────────────────────────────────────────────────────────────┐
