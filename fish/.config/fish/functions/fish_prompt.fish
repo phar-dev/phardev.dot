@@ -21,7 +21,12 @@ function fish_prompt
     echo -n $color_normal
     echo -n '@'
     echo -n $color_yellow
-    echo -n (hostname -s)
+    # Usar hostname o fallback si no está disponible
+    if type -q hostname
+        echo -n (hostname -s)
+    else
+        echo -n "localhost"
+    end
     echo -n $color_normal
     echo -n ' in '
     echo -n $color_blue
