@@ -59,16 +59,6 @@ check_dependencies() {
   fi
 }
 
-install_starship() {
-    if command -v starship >/dev/null 2>&1; then
-        info "Starship already installed"
-    else
-        info "Installing Starship..."
-        curl -sS https://starship.rs/install.sh | sh
-        info "Starship installed successfully"
-    fi
-}
-
 sync_stow() {
   local dry_run="$1"
   local verbose="$2"
@@ -130,11 +120,6 @@ main() {
   done
 
   check_dependencies
-
-    # Install Starship prompt
-    if [[ "$dry_run" != "true" ]]; then
-        install_starship
-    fi
 
   if [[ "$dry_run" == "true" ]]; then
     info "DRY RUN MODE - No changes will be made"
