@@ -10,13 +10,23 @@ set -e
 # Fix para tput en entornos no-interactivos
 export TERM="${TERM:-xterm}"
 
+# =====================================================
+# ⚙️ CONFIGURACIÓN
+# =====================================================
+
 # Rama del repositorio (por defecto master)
+# Se puede setear con variable BRANCH o argumento --branch
 REPO_BRANCH="${BRANCH:-master}"
 
 # URL base del repositorio
 REPO_URL="https://raw.githubusercontent.com/phar-dev/phardev.dot/refs/heads/${REPO_BRANCH}"
 
-# Colores
+# Función para reintentar descarga (cache busting)
+download_script() {
+  local script_name="$1"
+  local timestamp=$(date +%s)
+  curl -fsSL "${REPO_URL}/scripts/${script_name}?t=${timestamp}"
+}
 PINK=$(tput setaf 204)
 PURPLE=$(tput setaf 141)
 GREEN=$(tput setaf 114)
@@ -128,22 +138,22 @@ show_help() {
 🚀 Instalador Universal de Dotfiles phardev.dot
 
 Uso: 
-  BRANCH=feature/rama ./install.sh    # Usar una rama específica
-  ./install.sh              # Detectar distro automáticamente e instalar
-  ./install.sh --arch      # Forzar instalación para Arch Linux
-  ./install.sh --debian    # Forzar instalación para Debian/Ubuntu
-  ./install.sh --help      # Mostrar esta ayuda
-  ./install.sh --dry-run  # Simular instalación sin hacer cambios
+  ./install.sh                    # Detectar distro automáticamente
+  ./install.sh --arch             # Forzar instalación para Arch Linux
+  ./install.sh --debian           # Forzar instalación para Debian/Ubuntu
+  ./install.sh --branch <rama>    # Especificar rama del repo
+  ./install.sh --help             # Mostrar esta ayuda
+  ./install.sh --dry-run          # Simular instalación sin hacer cambios
 
 Ejemplos:
-  ./install.sh                           # Instalación automática (rama master)
-  BRANCH=feature/install-script-linux ./install.sh   # Usar rama específica
-  ./install.sh --arch                    # Instalar en Arch Linux
-  ./install.sh --debian                 # Instalar en Debian/Ubuntu
+  ./install.sh                                    # Instalación automática
+  ./install.sh --branch feature/install-script-linux  # Usar rama específica
+  ./install.sh --arch                            # Instalar en Arch Linux
+  ./install.sh --debian                         # Instalar en Debian/Ubuntu
 
-Nota: También podés descargar el instalador directamente:
-  curl -O https://raw.githubusercontent.com/phar-dev/phardev.dot/refs/heads/master/install.sh
-  BRANCH=feature/install-script-linux bash install.sh
+Descarga directa:
+  curl -sL https://raw.githubusercontent.com/phar-dev/phardev.dot/refs/heads/master/install.sh | bash
+  curl -sL https://raw.githubusercontent.com/phar-dev/phardev.dot/refs/heads/feature/install-script-linux/install.sh | bash
 EOF
 }
 
@@ -167,8 +177,10 @@ main() {
     
     # Descargar cada script
     for script in install-base.sh install-debian.sh install-arch.sh; do
-      if ! curl -fsSL "$REPO_URL/scripts/$script" -o "$temp_dir/$script"; then
+      info_msg "Descargando $script..."
+      if ! download_script "$script" > "$temp_dir/$script" 2>&1; then
         error_msg "Error al descargar $script"
+        cat "$temp_dir/$script" 2>/dev/null || true
         rm -rf "$temp_dir"
         exit 1
       fi
@@ -191,6 +203,13 @@ main() {
     --debian|-d)
       distro="debian"
       info_msg "Forzando instalación para Debian/Ubuntu"
+      ;;
+    --branch|-b)
+      REPO_BRANCH="${2:-master}"
+      export REPO_BRANCH
+      export REPO_URL="https://raw.githubusercontent.com/phar-dev/phardev.dot/refs/heads/${REPO_BRANCH}"
+      info_msg "Usando rama: $REPO_BRANCH"
+      shift
       ;;
     --help|-h)
       show_help
