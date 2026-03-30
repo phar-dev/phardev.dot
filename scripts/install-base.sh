@@ -338,15 +338,28 @@ set_default_shell() {
   fi
 
   # Cambiar shell automáticamente
+  local shell_changed=false
+  
+  # Intentar con chsh
   if command -v chsh &>/dev/null; then
     if chsh -s "$shell_path" 2>/dev/null; then
-      success_msg "Fish establecido como shell por defecto"
-    else
-      info_msg "Para cambiar manualmente: chsh -s $shell_path"
+      shell_changed=true
     fi
+  fi
+  
+  # Si chsh no funcionó, intentar con usermod
+  if [ "$shell_changed" = "false" ] && command -v usermod &>/dev/null; then
+    if usermod -s "$shell_path" "$USER" 2>/dev/null; then
+      shell_changed=true
+    fi
+  fi
+  
+  if [ "$shell_changed" = "true" ]; then
+    success_msg "Fish establecido como shell por defecto"
   else
-    info_msg "chsh no disponible"
-    info_msg "Para cambiar manualmente: chsh -s $shell_path"
+    warn_msg "No se pudo cambiar shell automáticamente"
+    info_msg "Ejecutá manualmente: chsh -s $shell_path"
+    info_msg "O si tenés sudo: sudo usermod -s $shell_path $USER"
   fi
 }
 
