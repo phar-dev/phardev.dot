@@ -317,17 +317,17 @@ set_default_shell() {
     echo "$shell_path" | sudo tee -a /etc/shells > /dev/null 2>&1 || true
   fi
 
-  # Cambiar shell (solo si no estamos en container/script)
-  if [ -z "$INSIDE_CONTAINER" ] && [ -z "$CI" ]; then
-    if command -v chsh &>/dev/null; then
-      info_msg "Para cambiar el shell por defecto, ejecuta:"
-      echo -e "  ${YELLOW}chsh -s $shell_path${RESET}"
-      echo
-      info_msg "O ejecuta: exec fish en tu próxima sesión"
+  # Cambiar shell automáticamente
+  if command -v chsh &>/dev/null; then
+    if chsh -s "$shell_path" 2>/dev/null; then
+      success_msg "Fish establecido como shell por defecto"
+    else
+      info_msg "Para cambiar manualmente: chsh -s $shell_path"
     fi
+  else
+    info_msg "chsh no disponible"
+    info_msg "Para cambiar manualmente: chsh -s $shell_path"
   fi
-
-  success_msg "Fish configurado"
 }
 
 # =====================================================
