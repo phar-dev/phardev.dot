@@ -10,6 +10,12 @@ set -e
 # Fix para tput en entornos no-interactivos
 export TERM="${TERM:-xterm}"
 
+# Rama del repositorio (por defecto master)
+REPO_BRANCH="${BRANCH:-master}"
+
+# URL base del repositorio
+REPO_URL="https://raw.githubusercontent.com/phar-dev/phardev.dot/refs/heads/${REPO_BRANCH}"
+
 # Colores
 PINK=$(tput setaf 204)
 PURPLE=$(tput setaf 141)
@@ -122,6 +128,7 @@ show_help() {
 🚀 Instalador Universal de Dotfiles phardev.dot
 
 Uso: 
+  BRANCH=feature/rama ./install.sh    # Usar una rama específica
   ./install.sh              # Detectar distro automáticamente e instalar
   ./install.sh --arch      # Forzar instalación para Arch Linux
   ./install.sh --debian    # Forzar instalación para Debian/Ubuntu
@@ -129,9 +136,14 @@ Uso:
   ./install.sh --dry-run  # Simular instalación sin hacer cambios
 
 Ejemplos:
-  ./install.sh             # Instalación automática
-  ./install.sh --arch      # Instalar en Arch Linux
-  ./install.sh --debian    # Instalar en Debian/Ubuntu
+  ./install.sh                           # Instalación automática (rama master)
+  BRANCH=feature/install-script-linux ./install.sh   # Usar rama específica
+  ./install.sh --arch                    # Instalar en Arch Linux
+  ./install.sh --debian                 # Instalar en Debian/Ubuntu
+
+Nota: También podés descargar el instalador directamente:
+  curl -O https://raw.githubusercontent.com/phar-dev/phardev.dot/refs/heads/master/install.sh
+  BRANCH=feature/install-script-linux bash install.sh
 EOF
 }
 
@@ -146,10 +158,28 @@ main() {
   # Obtener directorio del script
   script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   
-  # Verificar que scripts/ existe
+  # Verificar que scripts/ existe, si no descargarlo
   if [ ! -d "$script_dir/scripts" ]; then
-    error_msg "No se encontró el directorio scripts/"
-    exit 1
+    info_msg "Descargando scripts desde el repositorio (rama: $REPO_BRANCH)..."
+    
+    # Crear directorio temporal
+    local temp_dir=$(mktemp -d)
+    
+    # Descargar cada script
+    for script in install-base.sh install-debian.sh install-arch.sh; do
+      if ! curl -fsSL "$REPO_URL/scripts/$script" -o "$temp_dir/$script"; then
+        error_msg "Error al descargar $script"
+        rm -rf "$temp_dir"
+        exit 1
+      fi
+      chmod +x "$temp_dir/$script"
+    done
+    
+    # Mover al directorio final
+    mv "$temp_dir" "$script_dir/scripts"
+    rm -rf "$temp_dir"
+    
+    success_msg "Scripts descargados correctamente"
   fi
   
   # Parsear argumentos
