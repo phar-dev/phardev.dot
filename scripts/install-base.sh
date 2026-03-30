@@ -224,8 +224,28 @@ install_additional_tools() {
 
   install_zoxide
   install_atuin
+  install_starship
 
   success_msg "Herramientas adicionales configuradas"
+}
+
+# =====================================================
+# ⭐ INSTALAR STARSHIP
+# =====================================================
+
+install_starship() {
+  if is_installed starship; then
+    info_msg "Starship ya instalado"
+    return 0
+  fi
+
+  print_header "⭐ Instalando Starship"
+  info_msg "Instalando Starship prompt..."
+
+  # Instalar Starship
+  curl -sS https://starship.rs/install.sh | sh
+
+  success_msg "Starship instalado correctamente"
 }
 
 # =====================================================

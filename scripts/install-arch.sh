@@ -343,6 +343,13 @@ main() {
   install_rust_arch
   stow_dotfiles
   set_default_shell
+  
+  # Ejecutar stow-sync
+  if [ -f "$DOTFILES_PATH/stow-sync.sh" ]; then
+    info_msg "Ejecutando stow-sync.sh..."
+    bash "$DOTFILES_PATH/stow-sync.sh"
+  fi
+  
   cleanup
 
   print_header "🎉 ¡Instalación completada!"
