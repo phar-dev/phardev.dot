@@ -32,6 +32,8 @@ ARCH_BASE_PACKAGES=(
   "xclip"
   "wget"
   "curl"
+  "inetutils"        # hostname command
+  "coreutils"       # basic utilities (ls, cp, mv, etc.)
 )
 
 # Paquetes opcionales (AUR)

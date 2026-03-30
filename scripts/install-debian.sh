@@ -35,6 +35,8 @@ DEBIAN_BASE_PACKAGES=(
   "xclip"
   "pkg-config"
   "libssl-dev"
+  "hostname"         # hostname command
+  "coreutils"        # basic utilities
 )
 
 # =====================================================
