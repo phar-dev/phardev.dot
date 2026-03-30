@@ -168,33 +168,7 @@ main() {
   # Obtener directorio del script
   script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   
-  # Verificar que scripts/ existe, si no descargarlo
-  if [ ! -d "$script_dir/scripts" ]; then
-    info_msg "Descargando scripts desde el repositorio (rama: $REPO_BRANCH)..."
-    
-    # Crear directorio temporal
-    local temp_dir=$(mktemp -d)
-    
-    # Descargar cada script
-    for script in install-base.sh install-debian.sh install-arch.sh; do
-      info_msg "Descargando $script..."
-      if ! download_script "$script" > "$temp_dir/$script" 2>&1; then
-        error_msg "Error al descargar $script"
-        cat "$temp_dir/$script" 2>/dev/null || true
-        rm -rf "$temp_dir"
-        exit 1
-      fi
-      chmod +x "$temp_dir/$script"
-    done
-    
-    # Mover al directorio final
-    mv "$temp_dir" "$script_dir/scripts"
-    rm -rf "$temp_dir"
-    
-    success_msg "Scripts descargados correctamente"
-  fi
-  
-  # Parsear argumentos
+  # Parsear argumentos PRIMERO (para obtener la rama si se especificó)
   case "${1:-}" in
     --arch|-a)
       distro="arch"
@@ -232,6 +206,32 @@ main() {
       exit 1
       ;;
   esac
+  
+  # AHORA verificar que scripts/ existe, si no descargarlo
+  if [ ! -d "$script_dir/scripts" ]; then
+    info_msg "Descargando scripts desde el repositorio (rama: $REPO_BRANCH)..."
+    
+    # Crear directorio temporal
+    local temp_dir=$(mktemp -d)
+    
+    # Descargar cada script
+    for script in install-base.sh install-debian.sh install-arch.sh; do
+      info_msg "Descargando $script..."
+      if ! download_script "$script" > "$temp_dir/$script" 2>&1; then
+        error_msg "Error al descargar $script"
+        cat "$temp_dir/$script" 2>/dev/null || true
+        rm -rf "$temp_dir"
+        exit 1
+      fi
+      chmod +x "$temp_dir/$script"
+    done
+    
+    # Mover al directorio final
+    mv "$temp_dir" "$script_dir/scripts"
+    rm -rf "$temp_dir"
+    
+    success_msg "Scripts descargados correctamente"
+  fi
   
   echo
   print_header "🎨 phardev.dot - Instalador Universal"
