@@ -6,7 +6,7 @@ set -e
 # Constants
 readonly SCRIPT_NAME="stow-sync"
 readonly SCRIPT_VERSION="1.0.0"
-readonly STOW_DIRS=("fish" "ghostty" "nvim" "opencode" "starship" "tmux", "agents")
+readonly STOW_DIRS=("fish" "ghostty" "nvim" "opencode" "starship" "tmux" "agents")
 
 # Colors for output
 readonly RED='\033[0;31m'
@@ -56,6 +56,16 @@ EOF
 check_dependencies() {
     if ! command -v stow >/dev/null 2>&1; then
         error_exit "GNU Stow is required but not installed. Please install it first."
+    fi
+}
+
+install_starship() {
+    if command -v starship >/dev/null 2>&1; then
+        info "Starship already installed"
+    else
+        info "Installing Starship..."
+        curl -sS https://starship.rs/install.sh | sh
+        info "Starship installed successfully"
     fi
 }
 
@@ -120,6 +130,11 @@ main() {
     done
 
     check_dependencies
+
+    # Install Starship prompt
+    if [[ "$dry_run" != "true" ]]; then
+        install_starship
+    fi
 
     if [[ "$dry_run" == "true" ]]; then
         info "DRY RUN MODE - No changes will be made"
