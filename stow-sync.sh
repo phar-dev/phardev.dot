@@ -6,7 +6,7 @@ set -e
 # Constants
 readonly SCRIPT_NAME="stow-sync"
 readonly SCRIPT_VERSION="1.0.0"
-readonly STOW_DIRS=("fish" "ghostty" "nvim" "opencode" "starship" "tmux")
+readonly STOW_DIRS=("fish" "ghostty" "nvim" "opencode" "starship" "tmux" "agents")
 
 # Colors for output
 readonly RED='\033[0;31m'
@@ -16,20 +16,20 @@ readonly NC='\033[0m' # No Color
 
 # Functions
 error_exit() {
-    echo -e "${RED}Error: $1${NC}" >&2
-    exit 1
+  echo -e "${RED}Error: $1${NC}" >&2
+  exit 1
 }
 
 info() {
-    echo -e "${GREEN}$1${NC}"
+  echo -e "${GREEN}$1${NC}"
 }
 
 warning() {
-    echo -e "${YELLOW}$1${NC}"
+  echo -e "${YELLOW}$1${NC}"
 }
 
 usage() {
-    cat << EOF
+  cat <<EOF
 ${SCRIPT_NAME} v${SCRIPT_VERSION} - Sync dotfiles using GNU Stow
 
 USAGE:
@@ -54,85 +54,86 @@ EOF
 }
 
 check_dependencies() {
-    if ! command -v stow >/dev/null 2>&1; then
-        error_exit "GNU Stow is required but not installed. Please install it first."
-    fi
+  if ! command -v stow >/dev/null 2>&1; then
+    error_exit "GNU Stow is required but not installed. Please install it first."
+  fi
 }
 
 sync_stow() {
-    local dry_run="$1"
-    local verbose="$2"
+  local dry_run="$1"
+  local verbose="$2"
 
-    for dir in "${STOW_DIRS[@]}"; do
-        if [[ ! -d "$dir" ]]; then
-            warning "Directory '$dir' not found, skipping..."
-            continue
-        fi
+  for dir in "${STOW_DIRS[@]}"; do
+    if [[ ! -d "$dir" ]]; then
+      warning "Directory '$dir' not found, skipping..."
+      continue
+    fi
 
-        info "Processing $dir..."
+    info "Processing $dir..."
 
-        local stow_cmd=("stow")
-        if [[ "$dry_run" == "true" ]]; then
-            stow_cmd+=("--no")
-        fi
-        if [[ "$verbose" == "true" ]]; then
-            stow_cmd+=("--verbose")
-        fi
-        stow_cmd+=("$dir")
+    local stow_cmd=("stow")
+    if [[ "$dry_run" == "true" ]]; then
+      stow_cmd+=("--no")
+    fi
+    if [[ "$verbose" == "true" ]]; then
+      stow_cmd+=("--verbose")
+    fi
+    stow_cmd+=("$dir")
 
-        if ! "${stow_cmd[@]}"; then
-            error_exit "Failed to process $dir"
-        fi
+    if ! "${stow_cmd[@]}"; then
+      error_exit "Failed to process $dir"
+    fi
 
-        if [[ "$dry_run" != "true" ]]; then
-            info "✓ $dir synced successfully"
-        fi
-    done
+    if [[ "$dry_run" != "true" ]]; then
+      info "✓ $dir synced successfully"
+    fi
+  done
 }
 
 main() {
-    local dry_run="false"
-    local verbose="false"
+  local dry_run="false"
+  local verbose="false"
 
-    # Parse arguments
-    while [[ $# -gt 0 ]]; do
-        case $1 in
-            -d|--dry-run)
-                dry_run="true"
-                shift
-                ;;
-            -h|--help)
-                usage
-                exit 0
-                ;;
-            -v|--verbose)
-                verbose="true"
-                shift
-                ;;
-            --version)
-                echo "${SCRIPT_NAME} v${SCRIPT_VERSION}"
-                exit 0
-                ;;
-            *)
-                error_exit "Unknown option: $1. Use --help for usage information."
-                ;;
-        esac
-    done
+  # Parse arguments
+  while [[ $# -gt 0 ]]; do
+    case $1 in
+    -d | --dry-run)
+      dry_run="true"
+      shift
+      ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    -v | --verbose)
+      verbose="true"
+      shift
+      ;;
+    --version)
+      echo "${SCRIPT_NAME} v${SCRIPT_VERSION}"
+      exit 0
+      ;;
+    *)
+      error_exit "Unknown option: $1. Use --help for usage information."
+      ;;
+    esac
+  done
 
-    check_dependencies
+  check_dependencies
 
-    if [[ "$dry_run" == "true" ]]; then
-        info "DRY RUN MODE - No changes will be made"
-    fi
+  if [[ "$dry_run" == "true" ]]; then
+    info "DRY RUN MODE - No changes will be made"
+  fi
 
-    sync_stow "$dry_run" "$verbose"
+  sync_stow "$dry_run" "$verbose"
 
-    if [[ "$dry_run" != "true" ]]; then
-        info "All dotfiles synced successfully!"
-    else
-        info "Dry run completed. Use without --dry-run to apply changes."
-    fi
+  if [[ "$dry_run" != "true" ]]; then
+    info "All dotfiles synced successfully!"
+  else
+    info "Dry run completed. Use without --dry-run to apply changes."
+  fi
 }
 
 # Execute main function
 main "$@"
+

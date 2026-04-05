@@ -1,13 +1,32 @@
 #!/bin/bash
 
-# Detener el script si hay un error
+# =====================================================
+# 🚀 INSTALADOR UNIVERSAL DE DOTFILES
+# Detecta automáticamente la distro y usa el instalador apropiado
+# =====================================================
+
 set -e
 
+# Fix para tput en entornos no-interactivos
+export TERM="${TERM:-xterm}"
+
 # =====================================================
-# 🎨 CONFIGURACIÓN Y VARIABLES
+# ⚙️ CONFIGURACIÓN
 # =====================================================
 
-# Colores para formatear la salida
+# Rama del repositorio (por defecto master)
+# Se puede setear con variable BRANCH o argumento --branch
+REPO_BRANCH="${BRANCH:-master}"
+
+# URL base del repositorio
+REPO_URL="https://raw.githubusercontent.com/phar-dev/phardev.dot/refs/heads/${REPO_BRANCH}"
+
+# Función para reintentar descarga (cache busting)
+download_script() {
+  local script_name="$1"
+  local timestamp=$(date +%s)
+  curl -fsSL "${REPO_URL}/scripts/${script_name}?t=${timestamp}"
+}
 PINK=$(tput setaf 204)
 PURPLE=$(tput setaf 141)
 GREEN=$(tput setaf 114)
@@ -15,60 +34,74 @@ ORANGE=$(tput setaf 208)
 BLUE=$(tput setaf 75)
 YELLOW=$(tput setaf 221)
 RED=$(tput setaf 196)
-NC=$(tput sgr0) # No Color
+NC=$(tput sgr0)
 BOLD="\e[1m"
 RESET="\e[0m"
 
-# URLs y configuración
-BREW_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
-REPO_URL="https://github.com/phar-dev/phardev.dot.git"
-REPO_BRANCH="master"
-REPO_DIR="phardev.dot"
-ZOXIDE_URL="https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh"
-ATUIN_URL="https://setup.atuin.sh"
+# =====================================================
+# 🖥️ DETECCIÓN DE DISTRO
+# =====================================================
 
-# Paquetes
-BREW_PACKAGES=(
-  "fnm"
-  "pnpm"
-  "neovim"
-  "gh"
-  "ripgrep"
-  "lazygit"
-  "fzf"
-  "go"
-  "anomalyco/tap/opencode"
-)
-
-APT_PACKAGES=(
-"build-essential"
-"curl"
-"file"
-"git"
-"fish"
-"lsd"
-"unzip"
-"p7zip"
-"stow"
-"tmux"
-)
-
-STOW_DIRECTORIES=(
-"nvim"
-"fish"
-"opencode"
-"tmux"
-)
-
-# Directorios
-CONFIG_DIR="$HOME/.config"
-NVIM_CONFIG_DIR="$CONFIG_DIR/nvim"
+detect_distro() {
+  if [ -f /etc/os-release ]; then
+    source /etc/os-release
+    
+    # Linux Mint, Ubuntu, Pop!_OS, etc.
+    case "$ID" in
+      debian|ubuntu|linuxmint|pop|elementary|zorin|deepin|nerd|ultra)
+        echo "debian"
+        return
+        ;;
+      arch|endeavour|manjaro|arcolinux|archcraft|cachyos|garuda)
+        echo "arch"
+        return
+        ;;
+      fedora|rhel|centos|rocky|alma)
+        echo "fedora"
+        return
+        ;;
+      opensuse|sles)
+        echo "opensuse"
+        return
+        ;;
+      void)
+        echo "void"
+        return
+        ;;
+      nixos)
+        echo "nixos"
+        return
+        ;;
+    esac
+    
+    # Verificar variantes
+    if [ -f /etc/debian_version ]; then
+      echo "debian"
+      return
+    fi
+    
+    if [ -f /etc/arch-release ]; then
+      echo "arch"
+      return
+    fi
+  fi
+  
+  # Fallback: verificar archivos específicos
+  if [ -f /etc/debian_version ]; then
+    echo "debian"
+  elif [ -f /etc/arch-release ]; then
+    echo "arch"
+  elif [ -f /etc/fedora-release ]; then
+    echo "fedora"
+  else
+    echo "unknown"
+  fi
+}
 
 # =====================================================
 # 🛠️ FUNCIONES AUXILIARES
 # =====================================================
 
-# Función para imprimir encabezados
 print_header() {
   local text="$1"
   local len=${#text}
@@ -80,408 +113,177 @@ print_header() {
   echo
 }
 
-# Función para mostrar un spinner
-spinner() {
-  local pid=$1
-  local delay=0.1
-  local spinstr='|/-\'
-  while ps -p $pid >/dev/null; do
-    local temp=${spinstr#?}
-    printf " [%c]  " "$spinstr"
-    local spinstr=$temp${spinstr%"$temp"}
-    sleep $delay
-    printf "\b\b\b\b\b\b"
-  done
-  printf "    \b\b\b\b\b"
-}
-
-# Función para imprimir mensajes de éxito
 success_msg() {
   echo -e "${GREEN}✅ $1${RESET}"
 }
 
-# Función para imprimir mensajes informativos
 info_msg() {
   echo -e "${YELLOW}ℹ️ $1${RESET}"
 }
 
-# Función para imprimir errores
 error_msg() {
   echo -e "${RED}❌ $1${RESET}"
 }
 
-# Función para ejecutar comandos
-run_command() {
-  local command="$1"
-  local hide_output="${2:-false}"
-  local error_message="${3:-Error al ejecutar: $command}"
-
-  info_msg "Ejecutando: $command"
-
-  if [ "$hide_output" = "true" ]; then
-    eval "$command" &>/dev/null &
-    local cmd_pid=$!
-    spinner $cmd_pid
-    wait $cmd_pid
-    local exit_code=$?
-    if [ $exit_code -eq 0 ]; then
-      success_msg "Comando ejecutado con éxito"
-    else
-      error_msg "$error_message"
-      exit 1
-    fi
-  else
-    if eval "$command"; then
-      success_msg "Comando ejecutado con éxito"
-    else
-      error_msg "$error_message"
-      exit 1
-    fi
-  fi
-}
-
-# Función para verificar si un paquete está instalado
-is_installed() {
-  local pkg="$1"
-  command -v "$pkg" &>/dev/null
-}
-
-# Función para seleccionar opciones
-select_option() {
-  local prompt_message="$1"
-  shift
-  local options=("$@")
-  PS3="${ORANGE}$prompt_message${NC} "
-  select opt in "${options[@]}"; do
-    if [ -n "$opt" ]; then
-      echo "$opt"
-      break
-    else
-      error_msg "Opción inválida. Inténtalo de nuevo."
-    fi
-  done
-}
-
-# Función para seleccionar herramientas de lenguajes
-select_language_tools() {
-  print_header "💻 Selección de Lenguajes de Programación"
-  echo -e "${YELLOW}Herramientas de desarrollo opcionales:${RESET}"
-  echo
-
-  # Rust
-  echo -e "${BLUE}¿Instalar Rust?${RESET}"
-  INSTALL_RUST=$(select_option "¿Instalar Rust?" "Sí" "No")
-
-  # Go
-  echo -e "${BLUE}¿Instalar Go?${RESET}"
-  INSTALL_GO=$(select_option "¿Instalar Go?" "Sí" "No")
-
-  # Node.js tools
-  echo -e "${BLUE}¿Instalar herramientas de Node.js? (fnm, pnpm)${RESET}"
-  INSTALL_NODE=$(select_option "¿Instalar Node.js tools?" "Sí" "No")
+warn_msg() {
+  echo -e "${ORANGE}⚠️ $1${RESET}"
 }
 
 # =====================================================
-# 📋 FUNCIONES DE INSTALACIÓN
+# 📋 AYUDA
 # =====================================================
 
-# Verificar y crear directorios necesarios
-setup_directories() {
-  print_header "📁 Configurando directorios"
+show_help() {
+  cat << EOF
+🚀 Instalador Universal de Dotfiles phardev.dot
 
-  mkdir -p "$HOME/.local/share/atuin"
+Uso: 
+  ./install.sh                    # Detectar distro automáticamente
+  ./install.sh --arch             # Forzar instalación para Arch Linux
+  ./install.sh --debian           # Forzar instalación para Debian/Ubuntu
+  ./install.sh --branch <rama>    # Especificar rama del repo
+  ./install.sh --help             # Mostrar esta ayuda
+  ./install.sh --dry-run          # Simular instalación sin hacer cambios
 
-  success_msg "Directorios creados correctamente"
-}
+Ejemplos:
+  ./install.sh                                    # Instalación automática
+  ./install.sh --branch feature/install-script-linux  # Usar rama específica
+  ./install.sh --arch                            # Instalar en Arch Linux
+  ./install.sh --debian                         # Instalar en Debian/Ubuntu
 
-# Instalar dependencias básicas
-install_basic_dependencies() {
-  print_header "🛠️ Instalando dependencias básicas"
-
-  run_command "sudo apt-get update" true
-
-  for pkg in "${APT_PACKAGES[@]}"; do
-    if dpkg -l | grep -q "$pkg"; then
-      info_msg "$pkg ya está instalado"
-    else
-      info_msg "Instalando $pkg..."
-      run_command "sudo apt-get install -y $pkg" false "Error al instalar $pkg"
-    fi
-  done
-
-  success_msg "Dependencias básicas instaladas correctamente"
-}
-
-# Instalar Rust
-install_rust() {
-  print_header "🦀 Instalando Rust"
-
-  if is_installed rustc; then
-    info_msg "Rust ya está instalado"
-  else
-    run_command "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y" false
-    run_command "source $HOME/.cargo/env"
-  fi
-
-  success_msg "Rust instalado correctamente"
-}
-
-# Clonar repositorio de dotfiles
-clone_dotfiles_repo() {
-  print_header "📦 Clonando repositorio de dotfiles"
-
-  # Guardar directorio actual
-  local current_dir=$(pwd)
-
-  # Verificar si el repositorio ya existe
-  if [ -d "$REPO_DIR" ]; then
-    info_msg "Repositorio ya clonado. Actualizando..."
-    run_command "cd $REPO_DIR && git pull" false
-  else
-    run_command "git clone -b $REPO_BRANCH --single-branch $REPO_URL $REPO_DIR" false
-  fi
-
-  # Cambiar al directorio del repositorio
-  cd "$REPO_DIR" || exit 1
-
-  success_msg "Repositorio clonado/actualizado correctamente"
-
-  # Guardamos la ubicación del repositorio clonado para su uso posterior
-  DOTFILES_PATH=$(pwd)
-}
-
-# Instalar Homebrew
-install_homebrew() {
-  print_header "🍺 Instalando Homebrew"
-
-  if ! command -v brew &>/dev/null; then
-    /bin/bash -c "$(curl -fsSL $BREW_URL)"
-    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >>~/.bashrc
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-    success_msg "Homebrew instalado correctamente."
-
-    run_command "(echo 'eval \"\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\"' >> ~/.zshrc)"
-    run_command "(echo 'eval \"\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\"' >> ~/.bashrc)"
-    run_command "eval \"\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\""
-  else
-    success_msg "Homebrew ya está instalado."
-  fi
-
-}
-
-# Instalar paquetes de Homebrew
-install_brew_packages() {
-  print_header "📦 Instalando paquetes con Homebrew"
-
-  # Filter packages based on user selection
-  local packages_to_install=()
-
-  # Always install these core tools
-  packages_to_install+=("neovim" "gh" "ripgrep" "lazygit" "fzf" "anomalyco/tap/opencode")
-
-  # Conditional packages
-  if [ "$INSTALL_GO" = "Sí" ]; then
-    packages_to_install+=("go")
-  fi
-
-  if [ "$INSTALL_NODE" = "Sí" ]; then
-    packages_to_install+=("fnm" "pnpm")
-  fi
-
-  for pkg in "${packages_to_install[@]}"; do
-    echo -ne "${YELLOW}Instalando $pkg...${RESET}"
-    if brew list "$pkg" &>/dev/null; then
-      echo -e " ${GREEN}[Ya instalado]${RESET}"
-    else
-      if brew install "$pkg"; then
-        success_msg "$pkg instalado."
-      else
-        error_msg "Error al instalar $pkg"
-        # Continuar con la instalación en lugar de salir
-        info_msg "Continuando con la instalación de otros paquetes..."
-      fi
-    fi
-  done
-
-  success_msg "Paquetes de Homebrew instalados correctamente"
-}
-
-# Instalar y configurar herramientas adicionales
-install_additional_tools() {
-  print_header "🔧 Instalando herramientas adicionales"
-
-  # Instalar zoxide
-  if ! is_installed zoxide; then
-    info_msg "Instalando zoxide..."
-    run_command "curl -sSfL $ZOXIDE_URL | sh" false
-  else
-    info_msg "zoxide ya está instalado"
-  fi
-
-  # Instalar atuin - Mejorado para añadir al PATH
-  if ! is_installed atuin; then
-    info_msg "Instalando atuin..."
-    run_command "curl --proto '=https' --tlsv1.2 -LsSf $ATUIN_URL | sh" false
-
-    # Asegurar que atuin esté en el PATH (fish lo maneja automáticamente en config.fish)
-    success_msg "atuin instalado correctamente"
-  else
-    info_msg "atuin ya está instalado"
-  fi
-
-  success_msg "Herramientas adicionales instaladas correctamente"
-}
-
-# Configurar dotfiles con stow
-stow_dotfiles() {
-  print_header "🔗 Configurando dotfiles con stow"
-
-  # Cambiar al directorio del repositorio
-  cd "$DOTFILES_PATH" || exit 1
-
-  # Crear directorio de backup con timestamp
-  BACKUP_DIR="$HOME/backup-$(date +%Y%m%d_%H%M%S)"
-
-  # Backup de directorios/archivos existentes
-  for dir in "${STOW_DIRECTORIES[@]}"; do
-    case $dir in
-    nvim)
-      targets=("$HOME/.config/nvim")
-      ;;
-    fish)
-      targets=("$HOME/.config/fish")
-      ;;
-    opencode)
-      targets=("$HOME/.config/opencode")
-      ;;
-    tmux)
-      targets=("$HOME/.tmux.conf")
-      ;;
-    *)
-      targets=()
-      ;;
-    esac
-
-    for target in "${targets[@]}"; do
-      if [ -e "$target" ]; then
-        mkdir -p "$BACKUP_DIR"
-        mv "$target" "$BACKUP_DIR/$(basename "$target")"
-        info_msg "Backup de $target a $BACKUP_DIR/"
-      fi
-    done
-  done
-
-  # Ejecutar stow para cada directorio
-  for dir in "${STOW_DIRECTORIES[@]}"; do
-    info_msg "Configurando $dir..."
-    run_command "stow --verbose $dir" false
-  done
-
-  if [ -d "$BACKUP_DIR" ]; then
-    info_msg "Backups guardados en: $BACKUP_DIR"
-  fi
-
-  success_msg "Dotfiles configurados correctamente con stow"
-}
-
-# Establecer shell por defecto
-set_default_shell() {
-  print_header "🐚 Estableciendo shell por defecto"
-
-  local shell_name="fish"
-  local shell_path
-  shell_path=$(which "$shell_name")
-
-  if [ -n "$shell_path" ]; then
-    # Añadir shell a /etc/shells si no existe
-    run_command "grep -Fxq \"$shell_path\" /etc/shells || sudo sh -c \"echo $shell_path >> /etc/shells\"" true
-
-    # Cambiar shell por defecto
-    run_command "sudo chsh -s $shell_path $USER" false
-
-    if [ "$SHELL" != "$shell_path" ]; then
-      info_msg "Es posible que necesites reiniciar para que los cambios surtan efecto"
-      info_msg "Comando para cambiar shell manualmente: sudo chsh -s $shell_path \$USER"
-    else
-      success_msg "Shell cambiado a $shell_path correctamente"
-    fi
-  else
-    error_msg "Shell $shell_name no encontrado"
-  fi
-}
-
-# Limpiar después de la instalación
-cleanup() {
-  print_header "🧹 Limpiando"
-
-  # Asegurar permisos correctos para Homebrew
-  if command -v brew &>/dev/null; then
-    run_command "sudo chown -R $(whoami) $(brew --prefix)/*" false
-  fi
-
-  # Volver al directorio original si es necesario
-  if [ -n "$ORIGINAL_DIR" ] && [ -d "$ORIGINAL_DIR" ]; then
-    cd "$ORIGINAL_DIR"
-  fi
-
-  success_msg "Limpieza completada"
+Descarga directa:
+  curl -sL https://raw.githubusercontent.com/phar-dev/phardev.dot/refs/heads/master/install.sh | bash
+  curl -sL https://raw.githubusercontent.com/phar-dev/phardev.dot/refs/heads/feature/install-script-linux/install.sh | bash
+EOF
 }
 
 # =====================================================
-# 🚀 FUNCIÓN PRINCIPAL
+# 🚀 MAIN
 # =====================================================
 
 main() {
-  echo -e "${PURPLE}${BOLD}🚀 Bienvenido al Instalador Moderno de Dotfiles${RESET}"
-  echo -e "${BLUE}Configurando tu entorno de desarrollo con estilo...${RESET}"
+  local distro=""
+  local script_dir
+  
+  # Obtener directorio del script
+  script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  
+  # Parsear argumentos PRIMERO (para obtener la rama si se especificó)
+  case "${1:-}" in
+    --arch|-a)
+      distro="arch"
+      info_msg "Forzando instalación para Arch Linux"
+      ;;
+    --debian|-d)
+      distro="debian"
+      info_msg "Forzando instalación para Debian/Ubuntu"
+      ;;
+    --branch|-b)
+      REPO_BRANCH="${2:-master}"
+      export REPO_BRANCH
+      export REPO_URL="https://raw.githubusercontent.com/phar-dev/phardev.dot/refs/heads/${REPO_BRANCH}"
+      info_msg "Usando rama: $REPO_BRANCH"
+      shift
+      ;;
+    --help|-h)
+      show_help
+      exit 0
+      ;;
+    --dry-run|--dryrun)
+      info_msg "Modo dry-run (simulación)"
+      DRY_RUN=true
+      ;;
+    --)
+      # Fin de opciones
+      ;;
+    "")
+      # Sin argumentos, detectar automáticamente
+      distro=$(detect_distro)
+      ;;
+    *)
+      error_msg "Opción desconocida: $1"
+      show_help
+      exit 1
+      ;;
+  esac
+  
+  # AHORA verificar que scripts/ existe, si no descargarlo
+  if [ ! -d "$script_dir/scripts" ]; then
+    info_msg "Descargando scripts desde el repositorio (rama: $REPO_BRANCH)..."
+    
+    # Crear directorio temporal
+    local temp_dir=$(mktemp -d)
+    
+    # Descargar cada script
+    for script in install-base.sh install-debian.sh install-arch.sh; do
+      info_msg "Descargando $script..."
+      if ! download_script "$script" > "$temp_dir/$script" 2>&1; then
+        error_msg "Error al descargar $script"
+        cat "$temp_dir/$script" 2>/dev/null || true
+        rm -rf "$temp_dir"
+        exit 1
+      fi
+      chmod +x "$temp_dir/$script"
+    done
+    
+    # Mover al directorio final
+    mv "$temp_dir" "$script_dir/scripts"
+    rm -rf "$temp_dir"
+    
+    success_msg "Scripts descargados correctamente"
+  fi
+  
   echo
-
-  print_header "🚀 Iniciando instalación de dotfiles"
-
-  # Guardar directorio original
-  ORIGINAL_DIR=$(pwd)
-
-  # Verificar si se ejecuta como root
+  print_header "🎨 phardev.dot - Instalador Universal"
+  echo -e "${PURPLE}Bienvenido a la instalación de tus dotfiles${RESET}"
+  echo
+  
+  # Verificar que no se ejecute como root
   if [ "$(id -u)" -eq 0 ]; then
-    error_msg "Este script no debe ser ejecutado como root"
+    error_msg "Este script no debe ejecutarse como root"
+    echo -e "${YELLOW}Ejecutalo como usuario normal, te pedirá sudo cuando sea necesario${RESET}"
     exit 1
   fi
-
-  # Ask for language preferences
-  select_language_tools
-
-  # Ejecutar los pasos de instalación
-  setup_directories
-  install_basic_dependencies
-
-  # Conditional Rust installation
-  if [ "$INSTALL_RUST" = "Sí" ]; then
-    install_rust
+  
+  # Si no se forzó la distro, mostrar lo detectado
+  if [ -z "$distro" ] || [ "$distro" = "unknown" ]; then
+    distro=$(detect_distro)
   fi
-
-  clone_dotfiles_repo
-  install_homebrew
-  install_brew_packages
-  install_additional_tools
-  stow_dotfiles
-  set_default_shell
-  cleanup
-
-  print_header "🎉 ¡Instalación completada con éxito!"
-  echo -e "${BOLD}${GREEN}Para aplicar todos los cambios, cierre y vuelva a abrir su terminal${RESET}"
-  echo -e "${BOLD}${GREEN}O ejecute: exec fish${RESET}"
-  echo -e "${BOLD}${YELLOW}Personaliza tus configuraciones en: ${RESET}${BOLD}~/dots.config/${RESET}"
-
-  # Asegurar que estemos usando fish al final
-  if [ -x "$(command -v fish)" ]; then
-    echo -e "\n${YELLOW}Iniciando nueva sesión de fish...${RESET}"
-    sleep 1
-    # Usar esta técnica para asegurar que exec fish se ejecute como el último comando
-    exec fish -l
-  else
-    echo -e "\n${RED}fish no está disponible. Por favor instálelo e inicie una nueva sesión.${RESET}"
-  fi
+  
+  # Mostrar distro detectada
+  info_msg "Distribución detectada: $distro"
+  
+  # Seleccionar script según distro
+  case "$distro" in
+    arch)
+      info_msg "Ejecutando instalador para Arch Linux..."
+      echo
+      bash "$script_dir/scripts/install-arch.sh"
+      ;;
+    debian)
+      info_msg "Ejecutando instalador para Debian/Ubuntu..."
+      echo
+      bash "$script_dir/scripts/install-debian.sh"
+      ;;
+    fedora)
+      warn_msg "Fedora aún no tiene instalador específico"
+      warn_msg "Podés crear scripts/install-fedora.sh contribuyendo al proyecto"
+      echo
+      info_msg "Podés probar con ./install.sh --debian como alternativa"
+      exit 1
+      ;;
+    *)
+      error_msg "Distro no soportada: $distro"
+      echo
+      echo "Distros soportadas:"
+      echo "  • Arch Linux y derivados (EndeavourOS, Manjaro, etc.)"
+      echo "  • Debian, Ubuntu, Linux Mint, Pop!_OS, etc."
+      echo
+      echo "Podés crear un instalador específico contribuyendo al proyecto"
+      exit 1
+      ;;
+  esac
 }
 
-# Ejecutar función principal
-main
+# Ejecutar main
+main "$@"
