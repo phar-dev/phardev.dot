@@ -76,7 +76,7 @@ atuin init fish | source
 
 # OpenCode
 set -gx PATH /home/$USER/.opencode/bin $PATH
-set -gx EDITOR "code --wait"
+set -gx EDITOR "nvim"
 
 #Nodejs - fnm (Fast Node Manager)
 # Agregar fnm al PATH primero
