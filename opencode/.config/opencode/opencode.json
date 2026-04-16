@@ -26,18 +26,18 @@
         "baseURL": "{env:CUSTOM_PROVIDER}"
       },
       "models": {
-        "phardev/minimaxai/minimax-m2.7": {
-          "name": "MiniMax M2.7",
-          "options": {
-            "temperature": 0.7,
-            "maxTokens": 64000
-          }
-        },
-        "phardev/z-ai/glm5": {
-          "name": "GLM 5",
+        "phardev/coder": {
+          "name": "Main",
           "options": {
             "temperature": 0.5,
             "maxTokens": 32768
+          }
+        },
+        "phardev/testing": {
+          "name": "Testing",
+          "options": {
+            "temperature": 0.7,
+            "maxTokens": 64000
           }
         }
       }
