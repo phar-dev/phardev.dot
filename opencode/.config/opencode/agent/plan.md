@@ -1,7 +1,6 @@
 ---
 description: Strategic Planning Agent - Enfocado en requerimientos y arquitectura, no en implementación
 mode: primary
-model: nvidia/z-ai/glm4.7
 permission:
   task:
     "*": deny
