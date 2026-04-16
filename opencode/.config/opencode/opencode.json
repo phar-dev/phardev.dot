@@ -18,6 +18,32 @@
       "type": "local"
     }
   },
+  "provider": {
+    "litellm": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "litellm",
+      "options": {
+        "baseURL": "{env:CUSTOM_PROVIDER}"
+      },
+      "models": {
+        "phardev/minimaxai/minimax-m2.7": {
+          "name": "MiniMax M2.7",
+          "options": {
+            "temperature": 0.7,
+            "maxTokens": 64000
+          }
+        },
+        "phardev/z-ai/glm5": {
+          "name": "GLM 5",
+          "options": {
+            "temperature": 0.5,
+            "maxTokens": 32768
+          }
+        }
+      }
+    }
+  },
+
   "model": "opencode/minimax-m2.5-free",
   "permission": {
     "bash": {
@@ -43,4 +69,3 @@
     "ignore": ["node_modules/**", "dist/**", ".git/**"]
   }
 }
-
