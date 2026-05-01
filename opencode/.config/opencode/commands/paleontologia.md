@@ -2,6 +2,7 @@
 description: Quick commit investigation - find commits related to a topic or trace a file's history (fast mode). For deep time-travel analysis, load the paleontologia skill.
 skills:
   - git-master
+  - paleontologia
 ---
 
 # Quick Paleontology (Fast Mode)

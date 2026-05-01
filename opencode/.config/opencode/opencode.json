@@ -2,6 +2,7 @@
   "$schema": "https://opencode.ai/config.json",
   "autoupdate": true,
   "default_agent": "phardev",
+  "disabled_providers": [],
   "mcp": {
     "context7": {
       "type": "remote",
@@ -10,45 +11,14 @@
     },
     "engram": {
       "command": [
-        "/home/linuxbrew/.linuxbrew/Cellar/engram/1.12.0/bin/engram",
+        "/home/linuxbrew/.linuxbrew/Cellar/engram/1.14.12/bin/engram",
         "mcp",
         "--tools=agent"
       ],
       "enabled": true,
       "type": "local"
-    },
-    "notion": {
-      "type": "remote",
-      "url": "https://mcp.notion.com/mcp"
     }
   },
-  "provider": {
-    "litellm": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "litellm",
-      "options": {
-        "baseURL": "{env:CUSTOM_PROVIDER}"
-      },
-      "models": {
-        "phardev/coder": {
-          "name": "Main",
-          "options": {
-            "temperature": 0.5,
-            "maxTokens": 32768
-          }
-        },
-        "phardev/testing": {
-          "name": "Testing",
-          "options": {
-            "temperature": 0.7,
-            "maxTokens": 64000
-          }
-        }
-      }
-    }
-  },
-
-  "model": "opencode/minimax-m2.5-free",
   "permission": {
     "bash": {
       "*": "allow",
@@ -69,7 +39,28 @@
       "**/credentials.json": "deny"
     }
   },
+  "provider": {
+    "litellm": {
+      "name": "Phardev",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "https://route.phardev.site/v1"
+      },
+      "models": {
+        "phardev/coder": {
+          "name": "main"
+        },
+        "phardev/testing": {
+          "name": "testing"
+        }
+      }
+    }
+  },
   "watcher": {
-    "ignore": ["node_modules/**", "dist/**", ".git/**"]
+    "ignore": [
+      "node_modules/**",
+      "dist/**",
+      ".git/**"
+    ]
   }
 }

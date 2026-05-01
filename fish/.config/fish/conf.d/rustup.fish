@@ -1,4 +1,4 @@
-# Cargar entorno de Rust/Cargo si existe
-if test -f "$HOME/.cargo/env"
-    source "$HOME/.cargo/env"
+# Cargar entorno de Rust/Cargo
+if test -d "$HOME/.cargo/bin"
+    fish_add_path "$HOME/.cargo/bin"
 end
