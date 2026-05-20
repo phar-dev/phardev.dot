@@ -17,10 +17,6 @@
         "mcp",
         "--tools=agent"
       ]
-    },
-    "notion": {
-      "type": "remote",
-      "url": "https://mcp.notion.com/mcp"
     }
   },
   "permission": {
@@ -43,7 +39,28 @@
       "**/credentials.json": "deny"
     }
   },
+  "provider": {
+    "litellm": {
+      "name": "Phardev",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "https://route.phardev.site/v1"
+      },
+      "models": {
+        "phardev/coder": {
+          "name": "main"
+        },
+        "phardev/testing": {
+          "name": "testing"
+        }
+      }
+    }
+  },
   "watcher": {
-    "ignore": ["node_modules/**", "dist/**", ".git/**"]
+    "ignore": [
+      "node_modules/**",
+      "dist/**",
+      ".git/**"
+    ]
   }
 }
