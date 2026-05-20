@@ -10,13 +10,17 @@
       "enabled": true
     },
     "engram": {
+      "type": "local",
+      "enabled": true,
       "command": [
-        "/home/linuxbrew/.linuxbrew/Cellar/engram/1.14.12/bin/engram",
+        "/home/linuxbrew/.linuxbrew/Cellar/engram/1.15.13/bin/engram",
         "mcp",
         "--tools=agent"
-      ],
-      "enabled": true,
-      "type": "local"
+      ]
+    },
+    "notion": {
+      "type": "remote",
+      "url": "https://mcp.notion.com/mcp"
     }
   },
   "permission": {
@@ -39,28 +43,8 @@
       "**/credentials.json": "deny"
     }
   },
-  "provider": {
-    "litellm": {
-      "name": "Phardev",
-      "npm": "@ai-sdk/openai-compatible",
-      "options": {
-        "baseURL": "https://route.phardev.site/v1"
-      },
-      "models": {
-        "phardev/coder": {
-          "name": "main"
-        },
-        "phardev/testing": {
-          "name": "testing"
-        }
-      }
-    }
-  },
   "watcher": {
-    "ignore": [
-      "node_modules/**",
-      "dist/**",
-      ".git/**"
-    ]
+    "ignore": ["node_modules/**", "dist/**", ".git/**"]
   }
 }
+
