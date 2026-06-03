@@ -40,7 +40,7 @@ ARCH_BASE_PACKAGES=(
 AUR_PACKAGES=(
   "lsd"
   "bat"
-  "exa"
+  "eza"
   "lazygit"
   "gh"
   "go"
@@ -213,7 +213,7 @@ install_neovim() {
   if ! is_installed nvim; then
     # Si falla, intentar con AppImage
     warn_msg "Intentando instalar Neovim via AppImage..."
-    local nvim_version="0.10.0"
+    local nvim_version="0.10.4"
     
     run_cmd "wget -O /tmp/nvim.appimage https://github.com/neovim/neovim/releases/download/v${nvim_version}/nvim-linux64.appimage" \
       false "Error al descargar Neovim"
@@ -337,6 +337,7 @@ main() {
   install_aur_packages
   install_fish_arch
   install_neovim
+  select_language_tools
   install_dev_tools
   clone_dotfiles_repo
   install_additional_tools
@@ -344,7 +345,7 @@ main() {
   stow_dotfiles
   set_default_shell
   
-  # Ejecutar stow-sync
+  # Secondary stow pass with verbose output
   if [ -f "$DOTFILES_PATH/stow-sync.sh" ]; then
     info_msg "Ejecutando stow-sync.sh..."
     bash "$DOTFILES_PATH/stow-sync.sh"

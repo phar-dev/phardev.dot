@@ -15,7 +15,6 @@ DEBIAN_BASE_PACKAGES=(
   "curl"
   "wget"
   "git"
-  "fish"
   "stow"
   "tmux"
   "unzip"
@@ -26,12 +25,13 @@ DEBIAN_BASE_PACKAGES=(
   "bat"
   "ripgrep"
   "fzf"
-  "exa"
+  "eza"
   "jq"
   "htop"
   "ncdu"
   "tree"
   "silversearcher-ag"
+  "software-properties-common"
   "xclip"
   "pkg-config"
   "libssl-dev"
@@ -159,30 +159,45 @@ install_neovim() {
     return 0
   fi
 
-  local nvim_version="0.10.0"
+  local nvim_version="0.10.4"
   local nvim_appimage="nvim-linux64"
 
   info_msg "Descargando Neovim $nvim_version..."
-  
-  # Descargar AppImage
-  run_cmd "wget -O /tmp/nvim.appimage https://github.com/neovim/neovim/releases/download/v${nvim_version}/${nvim_appimage}.appimage" \
-    false "Error al descargar Neovim"
 
-  # Hacer ejecutable
+  # Download AppImage
+  if ! run_cmd "wget -O /tmp/nvim.appimage https://github.com/neovim/neovim/releases/download/v${nvim_version}/${nvim_appimage}.appimage" \
+    false "Error al descargar Neovim"; then
+    error_msg "No se pudo descargar Neovim"
+    return 1
+  fi
+
   chmod +x /tmp/nvim.appimage
 
-  # Instalar (como AppImage o extraer)
-  if [ ! -w /opt ]; then
-    # Si no tenemos permisos, instalar en ~/.local
-    mkdir -p "$HOME/.local/bin"
-    mv /tmp/nvim.appimage "$HOME/.local/bin/nvim"
-    chmod +x "$HOME/.local/bin/nvim"
-    export PATH="$HOME/.local/bin:$PATH"
+  # Check FUSE support — extract if unavailable (WSL, containers, etc.)
+  if command -v fusermount &>/dev/null || command -v fusermount3 &>/dev/null; then
+    info_msg "FUSE detectado, usando AppImage directamente"
   else
-    # Instalar en /opt
-    sudo mv /tmp/nvim.appimage /opt/nvim
-    sudo ln -sf /opt/nvim /usr/local/bin/nvim
+    info_msg "FUSE no detectado, extrayendo AppImage..."
+    cd /tmp && /tmp/nvim.appimage --appimage-extract &>/dev/null || {
+      warn_msg "No se pudo extraer AppImage, intentando ejecución directa..."
+    }
+    if [ -f /tmp/squashfs-root/usr/bin/nvim ]; then
+      mv /tmp/squashfs-root /tmp/nvim-appimage-extracted
+      rm -f /tmp/nvim.appimage
+      mkdir -p "$HOME/.local/bin"
+      ln -sf /tmp/nvim-appimage-extracted/usr/bin/nvim "$HOME/.local/bin/nvim"
+      export PATH="$HOME/.local/bin:$PATH"
+      success_msg "Neovim extraído correctamente"
+      return 0
+    fi
+    cd - > /dev/null
   fi
+
+  # Install in ~/.local/bin
+  mkdir -p "$HOME/.local/bin"
+  mv /tmp/nvim.appimage "$HOME/.local/bin/nvim"
+  chmod +x "$HOME/.local/bin/nvim"
+  export PATH="$HOME/.local/bin:$PATH"
 
   if is_installed nvim; then
     success_msg "Neovim instalado: $(nvim --version | head -1)"
@@ -217,7 +232,7 @@ install_dev_tools() {
       info_msg "Go ya instalado: $(go version)"
     else
       info_msg "Instalando Go..."
-      local go_version="1.21.5"
+      local go_version="1.23.4"
       local arch=$(dpkg --print-architecture)
       local go_file="go${go_version}.linux-${arch}.tar.gz"
       
@@ -237,7 +252,7 @@ install_dev_tools() {
       info_msg "fnm ya instalado"
     else
       info_msg "Instalando fnm..."
-      run_cmd "curl -fsSL https://fnm.vercel.app/install | bash" false "Error al instalar fnm"
+      run_cmd "curl -fsSL https://fnm.vercel.app/install | bash -s -- --skip-shell" false "Error al instalar fnm"
       export PATH="$HOME/.local/share/fnm:$PATH"
     fi
     
@@ -284,6 +299,7 @@ main() {
   install_apt_packages
   install_fish_debian
   install_neovim
+  select_language_tools
   install_dev_tools
   clone_dotfiles_repo
   install_additional_tools
@@ -291,7 +307,7 @@ main() {
   stow_dotfiles
   set_default_shell
   
-  # Ejecutar stow-sync
+  # Secondary stow pass with verbose output
   if [ -f "$DOTFILES_PATH/stow-sync.sh" ]; then
     info_msg "Ejecutando stow-sync.sh..."
     bash "$DOTFILES_PATH/stow-sync.sh"
