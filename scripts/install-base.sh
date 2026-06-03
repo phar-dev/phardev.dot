@@ -268,7 +268,7 @@ stow_dotfiles() {
 
   cd "$DOTFILES_PATH" || exit 1
 
-  local stow_dirs=("nvim" "fish" "opencode" "tmux")
+  local stow_dirs=("nvim" "fish" "opencode" "tmux" "ghostty" "starship" "agents")
 
   # Crear backup si no existe
   if [ -z "$BACKUP_DIR" ]; then
@@ -293,6 +293,24 @@ stow_dotfiles() {
     mkdir -p "$BACKUP_DIR"
     mv "$tmux_conf" "$BACKUP_DIR/" 2>/dev/null || true
     info_msg "Backup de $tmux_conf"
+  fi
+
+  local ghostty_dir="$HOME/.config/ghostty"
+  local starship_dir="$HOME/.config/starship"
+  local agents_dir="$HOME/.agents"
+
+  for dir in "$ghostty_dir" "$starship_dir"; do
+    if [ -e "$dir" ] && [ ! -L "$dir" ]; then
+      mkdir -p "$BACKUP_DIR"
+      mv "$dir" "$BACKUP_DIR/" 2>/dev/null || true
+      info_msg "Backup de $dir"
+    fi
+  done
+
+  if [ -e "$agents_dir" ] && [ ! -L "$agents_dir" ]; then
+    mkdir -p "$BACKUP_DIR"
+    mv "$agents_dir" "$BACKUP_DIR/" 2>/dev/null || true
+    info_msg "Backup de $agents_dir"
   fi
 
   # Ejecutar stow
