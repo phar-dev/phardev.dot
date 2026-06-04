@@ -27,6 +27,12 @@ REPO_DIR="phardev.dot"
 ZOXIDE_URL="https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh"
 ATUIN_URL="https://setup.atuin.sh"
 
+# =====================================================
+# 📦 VERSION CONSTANTS (single source of truth)
+# =====================================================
+NVIM_VERSION="0.10.4"
+GO_VERSION="1.23.4"
+
 # Directorios
 CONFIG_DIR="$HOME/.config"
 DOTFILES_PATH=""
@@ -86,6 +92,17 @@ warn_msg() {
 is_installed() {
   local cmd="$1"
   command -v "$cmd" &>/dev/null
+}
+
+# Detectar si estamos en modo interactivo (TTY + NO_ASK no seteado)
+is_interactive() {
+  [ -t 0 ] && [ "${NO_ASK:-false}" != "true" ]
+}
+
+# Mapear nombre abstracto de tool a nombre de paquete específico de distro
+# Cada distro sobreescribe esta función
+package_name() {
+  echo "$1"
 }
 
 # Ejecutar comando con manejo de errores
@@ -242,8 +259,8 @@ install_starship() {
   print_header "⭐ Instalando Starship"
   info_msg "Instalando Starship prompt..."
 
-  # Instalar Starship
-  curl -sS https://starship.rs/install.sh | sh
+  # Instalar Starship con -y para evitar prompt interactivo
+  curl -sS https://starship.rs/install.sh | sh -s -- -y
 
   success_msg "Starship instalado correctamente"
 }
@@ -426,6 +443,13 @@ cleanup() {
 
 select_language_tools() {
   print_header "💻 Selección de Lenguajes de Programación"
+
+  if ! is_interactive; then
+    info_msg "Modo no interactivo — saltando selección"
+    info_msg "Usá NO_ASK=true INSTALL_RUST=true INSTALL_GO=true INSTALL_NODE=true para evitar prompts"
+    return 0
+  fi
+
   echo -e "${YELLOW}Herramientas de desarrollo opcionales:${RESET}"
   echo
 
@@ -457,6 +481,7 @@ select_language_tools() {
 
 # Exportar funciones para que estén disponibles en otros scripts
 export -f print_header success_msg info_msg error_msg warn_msg
-export -f is_installed run_cmd setup_directories clone_dotfiles_repo
+export -f is_installed is_interactive package_name run_cmd
+export -f setup_directories clone_dotfiles_repo
 export -f install_zoxide install_atuin install_additional_tools
 export -f stow_dotfiles set_default_shell install_rust
