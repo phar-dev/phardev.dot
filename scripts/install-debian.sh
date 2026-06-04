@@ -10,34 +10,37 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/install-base.sh"
 
 # Paquetes esenciales para Debian/Ubuntu
+# Usamos nombres abstractos; package_name() mapea a concretos
 DEBIAN_BASE_PACKAGES=(
   "build-essential"
-  "curl"
-  "wget"
-  "git"
-  "stow"
-  "tmux"
-  "unzip"
-  "zip"
-  "p7zip-full"
-  "tar"
-  "lsd"
-  "bat"
-  "ripgrep"
-  "fzf"
-  "eza"
-  "jq"
-  "htop"
-  "ncdu"
-  "tree"
+  "curl" "wget" "git"
+  "stow" "tmux"
+  "unzip" "zip" "p7zip-full" "tar"
+  "ripgrep" "fzf" "jq"
+  "bat" "eza" "lsd"
+  "htop" "ncdu" "tree"
   "silversearcher-ag"
   "software-properties-common"
   "xclip"
   "pkg-config"
   "libssl-dev"
-  "hostname"         # hostname command
-  "coreutils"        # basic utilities
 )
+
+# Mapear nombres abstractos a paquetes de Debian/Ubuntu
+package_name() {
+  case "$1" in
+    bat)        echo "batcat" ;;
+    gh)         echo "gh" ;;
+    lazygit)    echo "lazygit" ;;
+    eza)        echo "eza" ;;  # Disponible en Debian 12+
+    lsd)        echo "lsd" ;;  # Disponible en Ubuntu 22.04+
+    p7zip-full) echo "p7zip-full" ;;
+    pkg-config) echo "pkg-config" ;;
+    openssl)    echo "libssl-dev" ;;
+    libssh2)    echo "libssh2-dev" ;;
+    *)          echo "$1" ;;
+  esac
+}
 
 # =====================================================
 # 📦 DETECCIÓN DE DISTRO
@@ -96,13 +99,14 @@ install_apt_packages() {
   info_msg "Actualizando repositorios..."
   run_cmd "sudo apt-get update" true "Error al actualizar repositorios"
 
-  # Instalar paquetes
+  # Instalar paquetes (usa package_name() para mapear nombres)
   for pkg in "${DEBIAN_BASE_PACKAGES[@]}"; do
-    if dpkg -l | grep -q "^ii  $pkg "; then
-      info_msg "$pkg ya instalado"
+    local apt_pkg=$(package_name "$pkg")
+    if dpkg -l | grep -q "^ii  $apt_pkg "; then
+      info_msg "$apt_pkg ya instalado"
     else
-      info_msg "Instalando $pkg..."
-      run_cmd "sudo apt-get install -y $pkg" false "Error al instalar $pkg" true
+      info_msg "Instalando $apt_pkg..."
+      run_cmd "sudo apt-get install -y $apt_pkg" false "Error al instalar $apt_pkg" true
     fi
   done
 
@@ -159,13 +163,12 @@ install_neovim() {
     return 0
   fi
 
-  local nvim_version="0.10.4"
   local nvim_appimage="nvim-linux64"
 
-  info_msg "Descargando Neovim $nvim_version..."
+  info_msg "Descargando Neovim $NVIM_VERSION..."
 
   # Download AppImage
-  if ! run_cmd "wget -O /tmp/nvim.appimage https://github.com/neovim/neovim/releases/download/v${nvim_version}/${nvim_appimage}.appimage" \
+  if ! run_cmd "wget -O /tmp/nvim.appimage https://github.com/neovim/neovim/releases/download/v${NVIM_VERSION}/${nvim_appimage}.appimage" \
     false "Error al descargar Neovim"; then
     error_msg "No se pudo descargar Neovim"
     return 1
@@ -231,10 +234,9 @@ install_dev_tools() {
     if is_installed go; then
       info_msg "Go ya instalado: $(go version)"
     else
-      info_msg "Instalando Go..."
-      local go_version="1.23.4"
+      info_msg "Instalando Go $GO_VERSION..."
       local arch=$(dpkg --print-architecture)
-      local go_file="go${go_version}.linux-${arch}.tar.gz"
+      local go_file="go${GO_VERSION}.linux-${arch}.tar.gz"
       
       run_cmd "wget -O /tmp/go.tar.gz https://go.dev/dl/${go_file}" false "Error al descargar Go"
       run_cmd "sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf /tmp/go.tar.gz" false "Error al instalar Go"

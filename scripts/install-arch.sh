@@ -36,18 +36,31 @@ ARCH_BASE_PACKAGES=(
   "coreutils"       # basic utilities (ls, cp, mv, etc.)
 )
 
-# Paquetes opcionales (AUR)
+# Paquetes opcionales (AUR) — solo lo que NO se instala por otro medio
+# zoxide/atuin → install_additional_tools (vía script)
+# go/fnm → install_dev_tools (condicional + pacman)
+# gh → pacman (github-cli en extra repo)
 AUR_PACKAGES=(
   "lsd"
   "bat"
   "eza"
   "lazygit"
-  "gh"
-  "go"
-  "fnm"
-  "atuin"
-  "zoxide"
 )
+
+# Mapear nombres abstractos a paquetes de Arch
+package_name() {
+  case "$1" in
+    bat)        echo "bat" ;;
+    gh)         echo "github-cli" ;;
+    lazygit)    echo "lazygit" ;;
+    eza)        echo "eza" ;;
+    lsd)        echo "lsd" ;;
+    p7zip-full) echo "p7zip" ;;
+    pkg-config) echo "pkgconf" ;;
+    openssl)    echo "openssl" ;;
+    *)          echo "$1" ;;
+  esac
+}
 
 # =====================================================
 # 📦 DETECCIÓN DE DISTRO
@@ -178,21 +191,13 @@ install_aur_packages() {
 # =====================================================
 
 install_fish_arch() {
-  print_header "🐟 Instalando Fish Shell"
-
-  if is_installed fish; then
-    info_msg "Fish ya instalado: $(fish --version)"
-    return 0
-  fi
-
-  run_cmd "sudo pacman -S --noconfirm fish" false "Error al instalar fish"
-
+  # Fish ya viene en ARCH_BASE_PACKAGES, solo verificamos
   if is_installed fish; then
     success_msg "Fish instalado: $(fish --version)"
-  else
-    error_msg "No se pudo instalar fish"
-    return 1
+    return 0
   fi
+  error_msg "Fish no se instaló correctamente"
+  return 1
 }
 
 # =====================================================
@@ -213,9 +218,8 @@ install_neovim() {
   if ! is_installed nvim; then
     # Si falla, intentar con AppImage
     warn_msg "Intentando instalar Neovim via AppImage..."
-    local nvim_version="0.10.4"
     
-    run_cmd "wget -O /tmp/nvim.appimage https://github.com/neovim/neovim/releases/download/v${nvim_version}/nvim-linux64.appimage" \
+    run_cmd "wget -O /tmp/nvim.appimage https://github.com/neovim/neovim/releases/download/v${NVIM_VERSION}/nvim-linux64.appimage" \
       false "Error al descargar Neovim"
     
     chmod +x /tmp/nvim.appimage
@@ -285,31 +289,6 @@ install_dev_tools() {
 }
 
 # =====================================================
-# 🦀 RUST (si se seleccionó)
-# =====================================================
-
-install_rust_arch() {
-  if [ "$INSTALL_RUST" != "Sí" ]; then
-    return 0
-  fi
-
-  print_header "🦀 Instalando Rust"
-
-  if is_installed rustc; then
-    info_msg "Rust ya instalado"
-    return 0
-  fi
-
-  run_cmd "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y" false "Error al instalar Rust"
-
-  if [ -f "$HOME/.cargo/env" ]; then
-    source "$HOME/.cargo/env"
-  fi
-
-  success_msg "Rust instalado"
-}
-
-# =====================================================
 # 🚀 INSTALACIÓN PRINCIPAL
 # =====================================================
 
@@ -341,7 +320,7 @@ main() {
   install_dev_tools
   clone_dotfiles_repo
   install_additional_tools
-  install_rust_arch
+  install_rust
   stow_dotfiles
   set_default_shell
   
