@@ -106,9 +106,29 @@ install_apt_packages() {
       info_msg "$apt_pkg ya instalado"
     else
       info_msg "Instalando $apt_pkg..."
-      run_cmd "sudo apt-get install -y $apt_pkg" false "Error al instalar $apt_pkg" true
+      if run_cmd "sudo apt-get install -y $apt_pkg" false "Error al instalar $apt_pkg" true; then
+        # Verificar que realmente quedó instalado
+        if ! dpkg -l | grep -q "^ii  $apt_pkg "; then
+          warn_msg "⚠️  $apt_pkg reporta éxito pero no aparece instalado — quizás no está en los repos"
+        fi
+      fi
     fi
   done
+
+  # Verificaciones post-install: avisar si algo crítico no quedó
+  local missing=()
+  is_installed batcat || is_installed bat || missing+=("bat/batcat")
+  is_installed eza || missing+=("eza")
+  is_installed lsd || missing+=("lsd")
+  is_installed gh || missing+=("gh")
+
+  if [ ${#missing[@]} -gt 0 ]; then
+    warn_msg "Paquetes opcionales no instalados (pueden no estar en tus repos):"
+    for pkg in "${missing[@]}"; do
+      warn_msg "  • $pkg"
+    done
+    info_msg "Si los necesitás, instalalos manualmente o via cargo"
+  fi
 
   success_msg "Paquetes base instalados"
 }
@@ -163,44 +183,8 @@ install_neovim() {
     return 0
   fi
 
-  local nvim_appimage="nvim-linux64"
-
-  info_msg "Descargando Neovim $NVIM_VERSION..."
-
-  # Download AppImage
-  if ! run_cmd "wget -O /tmp/nvim.appimage https://github.com/neovim/neovim/releases/download/v${NVIM_VERSION}/${nvim_appimage}.appimage" \
-    false "Error al descargar Neovim"; then
-    error_msg "No se pudo descargar Neovim"
-    return 1
-  fi
-
-  chmod +x /tmp/nvim.appimage
-
-  # Check FUSE support — extract if unavailable (WSL, containers, etc.)
-  if command -v fusermount &>/dev/null || command -v fusermount3 &>/dev/null; then
-    info_msg "FUSE detectado, usando AppImage directamente"
-  else
-    info_msg "FUSE no detectado, extrayendo AppImage..."
-    cd /tmp && /tmp/nvim.appimage --appimage-extract &>/dev/null || {
-      warn_msg "No se pudo extraer AppImage, intentando ejecución directa..."
-    }
-    if [ -f /tmp/squashfs-root/usr/bin/nvim ]; then
-      mv /tmp/squashfs-root /tmp/nvim-appimage-extracted
-      rm -f /tmp/nvim.appimage
-      mkdir -p "$HOME/.local/bin"
-      ln -sf /tmp/nvim-appimage-extracted/usr/bin/nvim "$HOME/.local/bin/nvim"
-      export PATH="$HOME/.local/bin:$PATH"
-      success_msg "Neovim extraído correctamente"
-      return 0
-    fi
-    cd - > /dev/null
-  fi
-
-  # Install in ~/.local/bin
-  mkdir -p "$HOME/.local/bin"
-  mv /tmp/nvim.appimage "$HOME/.local/bin/nvim"
-  chmod +x "$HOME/.local/bin/nvim"
-  export PATH="$HOME/.local/bin:$PATH"
+  # Versión simple: la del repo. Sin 404, sin FUSE, sin AppImage.
+  run_cmd "sudo apt-get install -y neovim" false "Error al instalar neovim"
 
   if is_installed nvim; then
     success_msg "Neovim instalado: $(nvim --version | head -1)"
@@ -217,16 +201,34 @@ install_neovim() {
 install_dev_tools() {
   print_header "💻 Instalando herramientas de desarrollo"
 
-  # Git (ya debería estar instalado, pero verificamos)
+  # GitHub CLI
   if is_installed gh; then
     info_msg "GitHub CLI ya instalado"
   else
     info_msg "Instalando GitHub CLI..."
-    # Añadir repo de GitHub
-    type -p wget > /dev/null || sudo apt-get install -y wget
-    wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-    run_cmd "sudo apt-get update && sudo apt-get install -y gh" false "Error al instalar gh"
+    # Intentar primero vía apt directo (puede estar en universe/contrib)
+    if apt-cache show gh &>/dev/null; then
+      run_cmd "sudo apt-get install -y gh" false "Error al instalar gh desde apt"
+    else
+      # Añadir repo oficial de GitHub
+      info_msg "Añadiendo repositorio oficial de GitHub CLI..."
+      type -p wget > /dev/null || sudo apt-get install -y wget
+      type -p gpg > /dev/null || sudo apt-get install -y gpg
+
+      # Usar /etc/apt/keyrings (estándar moderno) con fallback a /usr/share/keyrings
+      local keyring_dir="/etc/apt/keyrings"
+      sudo install -m 0755 -d "$keyring_dir" 2>/dev/null || keyring_dir="/usr/share/keyrings"
+      sudo install -m 0755 -d "$keyring_dir"
+
+      local keyring_file="$keyring_dir/githubcli-archive-keyring.gpg"
+      if ! curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee "$keyring_file" > /dev/null; then
+        warn_msg "No se pudo descargar la GPG key de GitHub CLI"
+      else
+        sudo chmod 0644 "$keyring_file"
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=$keyring_file] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+        run_cmd "sudo apt-get update && sudo apt-get install -y gh" false "Error al instalar gh"
+      fi
+    fi
   fi
 
   # Go

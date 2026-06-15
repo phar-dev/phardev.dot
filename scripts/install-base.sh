@@ -27,12 +27,6 @@ REPO_DIR="phardev.dot"
 ZOXIDE_URL="https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh"
 ATUIN_URL="https://setup.atuin.sh"
 
-# =====================================================
-# 📦 VERSION CONSTANTS (single source of truth)
-# =====================================================
-NVIM_VERSION="0.10.4"
-GO_VERSION="1.23.4"
-
 # Directorios
 CONFIG_DIR="$HOME/.config"
 DOTFILES_PATH=""

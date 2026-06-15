@@ -212,22 +212,8 @@ install_neovim() {
     return 0
   fi
 
-  # Instalar desde pacman (versión más actualizada en repositorios de Arch)
+  # Versión simple: la del repo oficial. Sin 404, sin FUSE, sin AppImage.
   run_cmd "sudo pacman -S --noconfirm neovim" false "Error al instalar neovim"
-
-  if ! is_installed nvim; then
-    # Si falla, intentar con AppImage
-    warn_msg "Intentando instalar Neovim via AppImage..."
-    
-    run_cmd "wget -O /tmp/nvim.appimage https://github.com/neovim/neovim/releases/download/v${NVIM_VERSION}/nvim-linux64.appimage" \
-      false "Error al descargar Neovim"
-    
-    chmod +x /tmp/nvim.appimage
-    mkdir -p "$HOME/.local/bin"
-    mv /tmp/nvim.appimage "$HOME/.local/bin/nvim"
-    chmod +x "$HOME/.local/bin/nvim"
-    export PATH="$HOME/.local/bin:$PATH"
-  fi
 
   if is_installed nvim; then
     success_msg "Neovim instalado: $(nvim --version | head -1)"
