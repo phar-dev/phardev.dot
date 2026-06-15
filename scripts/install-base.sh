@@ -354,42 +354,50 @@ set_default_shell() {
     return 1
   fi
 
-  # Verificar si ya es el shell por defecto
-  if [ "$SHELL" = "$shell_path" ]; then
-    info_msg "Fish ya es el shell por defecto"
+  # Verificar el login shell REAL (no $SHELL que es el del proceso actual)
+  local current_login_shell
+  current_login_shell=$(getent passwd "$USER" | cut -d: -f7)
+  if [ "$current_login_shell" = "$shell_path" ]; then
+    success_msg "Fish ya es tu login shell"
     return 0
   fi
 
-  # Añadir a /etc/shells si no existe
+  # Asegurar que fish está en /etc/shells (requerido por chsh)
   if ! grep -Fxq "$shell_path" /etc/shells 2>/dev/null; then
-    info_msg "Añadiendo Fish a /etc/shells..."
-    echo "$shell_path" | sudo tee -a /etc/shells > /dev/null 2>&1 || true
+    if [ -w /etc/shells ] || sudo -n true 2>/dev/null; then
+      info_msg "Añadiendo Fish a /etc/shells..."
+      if ! echo "$shell_path" | sudo tee -a /etc/shells > /dev/null; then
+        warn_msg "No se pudo añadir fish a /etc/shells — chsh puede fallar"
+      fi
+    else
+      warn_msg "Sin acceso a /etc/shells (sudo NOPASSWD requerido)"
+    fi
   fi
 
-  # Cambiar shell automáticamente
-  local shell_changed=false
-  
-  # Intentar con chsh
-  if command -v chsh &>/dev/null; then
-    if chsh -s "$shell_path" 2>/dev/null; then
-      shell_changed=true
-    fi
+  # Opción 1: usermod con sudo no-interactivo (rápido, no PAM)
+  if sudo -n usermod -s "$shell_path" "$USER" 2>/dev/null; then
+    success_msg "Fish establecido como shell por defecto (usermod)"
+    return 0
   fi
-  
-  # Si chsh no funcionó, intentar con usermod
-  if [ "$shell_changed" = "false" ] && command -v usermod &>/dev/null; then
-    if usermod -s "$shell_path" "$USER" 2>/dev/null; then
-      shell_changed=true
+
+  # Opción 2: chsh — solo si hay TTY (PAM pide password, sino cuelga)
+  if is_interactive && command -v chsh &>/dev/null; then
+    info_msg "Cambiando shell con chsh (te pedirá password)..."
+    if chsh -s "$shell_path"; then
+      success_msg "Fish establecido como shell por defecto (chsh)"
+      return 0
     fi
-  fi
-  
-  if [ "$shell_changed" = "true" ]; then
-    success_msg "Fish establecido como shell por defecto"
+    warn_msg "chsh falló"
   else
-    warn_msg "No se pudo cambiar shell automáticamente"
-    info_msg "Ejecutá manualmente: chsh -s $shell_path"
-    info_msg "O si tenés sudo: sudo usermod -s $shell_path $USER"
+    warn_msg "Saltando chsh (modo no interactivo — pediría password)"
   fi
+
+  # Falló todo → instrucciones manuales
+  warn_msg "No se pudo cambiar el shell automáticamente"
+  info_msg "Ejecutá manualmente uno de estos:"
+  info_msg "  sudo usermod -s $shell_path $USER"
+  info_msg "  chsh -s $shell_path"
+  return 1
 }
 
 # =====================================================
